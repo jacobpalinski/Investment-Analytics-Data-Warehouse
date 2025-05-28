@@ -1,33 +1,70 @@
 # Import modules
+import os
+import time
+import csv
 from typing import List
+import pandas as pd
+from dotenv import load_dotenv
 from polygon import RESTClient, WebSocketClient
 from polygon.websocket.models import WebSocketMessage, Feed, Market
 
-# Create a stock client to retrieve ticker symbols
-client = RESTClient("YOUR_API_KEY")
+# Load environment variables
+load_dotenv()
 
-# Create a list of all stock tickers on Nasdaq
-tickers = client.list_tickers(
-	market=Market.Stocks,
-	limit=1000  # Adjust the limit as needed
-)
+# Access API key from environment variables
+polygon_api_key = os.getenv("POLYGON_API_KEY")
 
-# Create a WebSocket client for Polygon.io to receive stock aggregates
-client = WebSocketClient(
-	api_key="YOUR_API_KEY",
-	feed=Feed.Delayed,
-	market=Market.Stocks
-	)
+# Load ticker symbols from CSV
+df = pd.read_csv("nasdaq_listed_symbols.csv")
+tickers = df['Symbol'].dropna().tolist()
 
-# aggregates (per minute)
-client.subscribe("AM.*") # single ticker
-# client.subscribe("AM.*") # all tickers
-# client.subscribe("AM.AAPL") # single ticker
-# client.subscribe("AM.AAPL", "AM.MSFT") # multiple tickers
+# Prefix each ticker with "AM." to subscribe to per-minute aggregates
+tickers = [f"AM.{t}" for t in tickers]
 
-def handle_msg(msgs: List[WebSocketMessage]):
-    for m in msgs:
-        print(m)
+# File to store output
+output_file = "candlesticks.csv"
+fieldnames = ["ticker", "timestamp", "open", "high", "low", "close", "volume", "vwap", "transactions"]
 
-# print messages
-client.run(handle_msg)
+# Set up timer
+start_time = time.time()
+run_duration = 10 * 60  # 10 minutes
+
+# Open CSV file
+with open(output_file, mode="w", newline="") as f:
+    writer = csv.DictWriter(f, fieldnames=fieldnames)
+    writer.writeheader()
+
+    # Create WebSocket client
+    ws_client = WebSocketClient(
+        api_key=polygon_api_key,
+        feed=Feed.Delayed,
+        market=Market.Stocks
+    )
+
+    # Subscribe to tickers
+    ws_client.subscribe(*tickers)
+
+    # Define message handler
+    def handle_msg(msgs: List[WebSocketMessage]):
+        for m in msgs:
+			writer.writerow({
+			"t": m.sym, # Ticker symbol
+			"e": m.e, # End timestamp of aggregate window
+			"open": m.o,
+			"high": m.high,
+			"low": m.low,
+			"close": m.close,
+			"volume": m.volume,
+			"vwap": m.vwap,
+			"transactions": m.transactions,
+			})
+			print(f"Saved: {m.ticker} @ {m.timestamp}")
+
+        # Stop after 10 minutes
+        if time.time() - start_time > run_duration:
+            print("10 minutes reached. Closing WebSocket.")
+            ws_client.close_connection()
+
+    # Run WebSocket with handler
+    ws_client.run(handle_msg)
+
