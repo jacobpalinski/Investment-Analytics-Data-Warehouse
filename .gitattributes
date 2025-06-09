@@ -1,0 +1,2 @@
+initial_exploration/sentiment/reddit_sentiment_scores.csv filter=lfs diff=lfs merge=lfs -text
+initial_exploration/sentiment/reddit_sentiment.json filter=lfs diff=lfs merge=lfs -text

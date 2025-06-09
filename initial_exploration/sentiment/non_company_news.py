@@ -3,27 +3,27 @@ import os
 import pandas as pd
 from newsdataapi import NewsDataApiClient
 from dotenv import load_dotenv
+from tenacity import retry, wait_fixed, stop_after_attempt, RetryError, before_log, after_log, retry_if_exception_type
+import concurrent.futures
+import logging
 
-# Load environment variables
+# ------------------- Setup Logging -------------------
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+
+# ------------------- Load API Key -------------------
 load_dotenv()
-
-# Access API key from environment variables
 news_api_key = os.getenv("NEWS_API_KEY")
-
-# Connect to NewsData API
 client = NewsDataApiClient(news_api_key)
 
-# Store news data in a list
-news_data = []
-
-# Combinations of parameters to fetch news
+# ------------------- Parameter Combos -------------------
 parameter_combinations = [
     {"category": "business", "country": "us", "qInMeta": "economy AND interest rate"},
     {"category": "business", "country": "us", "qInMeta": "economy AND inflation"},
     {"category": "business", "country": "us", "qInMeta": "economy AND liquidity"},
     {"category": "business", "country": "us", "qInMeta": "economy AND Federal Reserve"},
     {"category": "business", "country": "us", "qInMeta": "economy AND consumer confidence"},
-    {"category": "business", "country": "us", "qInMeta": "economy and undemployment"},
+    {"category": "business", "country": "us", "qInMeta": "economy and unemployment"},
     {"category": "business", "country": "us", "qInMeta": "economy AND GDP"},
     {"category": "business", "country": "us", "qInMeta": "economy AND tariffs"},
     {"category": "business", "country": "us", "qInMeta": "economy AND treasury yields"},
@@ -39,35 +39,71 @@ parameter_combinations = [
     {"category": "politics", "country": "us", "qInMeta": "Republicans"}
 ]
 
-for params in parameter_combinations:
-    try:
-        # Fetch news with the specified parameters
-        response = client.news_api(
+# ------------------- Safe API Call with Timeout -------------------
+def call_news_api_with_timeout(params, timeout=10):
+    def api_call():
+        return client.news_api(
             category=params["category"],
             country=params["country"],
             qInMeta=params["qInMeta"],
-            timeframe="24",
             language="en",
             size=10,
-            full_content="1",
-            removeduplicate="1"
+            removeduplicate=True
         )
-        
-        # Append each news item to the news_data list
-        for item in response['results']:
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(api_call)
+        try:
+            return future.result(timeout=timeout)
+        except concurrent.futures.TimeoutError:
+            raise TimeoutError(f"API call timed out after {timeout}s for params: {params}")
+
+# ------------------- Retry Wrapper -------------------
+@retry(
+    retry=retry_if_exception_type((TimeoutError, ValueError)),
+    wait=wait_fixed(10),
+    stop=stop_after_attempt(3),
+    before=before_log(logger, logging.INFO),
+    after=after_log(logger, logging.INFO)
+)
+def fetch_news(params):
+    logger.info(f"Attempting API call with params: {params}")
+    response = call_news_api_with_timeout(params, timeout=10)
+
+    if not response or "results" not in response or len(response["results"]) == 0:
+        raise ValueError("Empty or invalid response received from NewsData API.")
+
+    return response
+
+# ------------------- Fetch News Loop -------------------
+news_data = []
+failed_params = []
+
+for params in parameter_combinations:
+    print(f"Fetching: {params}")
+    try:
+        response = fetch_news(params)
+        for item in response["results"]:
             news_data.append({
-                "date": item.pubDate,
-                "title": item.title,
-                "content": item.content,
-                "source": item.source_name,
-                "sentiment_scores": item.sentiment_scores
+                "date": item.get("pubDate"),
+                "date_tz": item.get("pubDateTZ"),
+                "title": item.get("title"),
+                "description": item.get("description"),
+                "source": item.get("source_name")
             })
-    
+
+    except RetryError as re:
+        logger.error(f"[MAX RETRIES] Failed for params: {params} | Reason: {re.last_attempt.exception()}")
+        failed_params.append((params, str(re.last_attempt.exception())))
     except Exception as e:
-        print(f"Error fetching news for {params}: {e}")
+        logger.error(f"Unexpected error for {params}: {e}")
+        failed_params.append((params, str(e)))
 
-# Convert news data list to DataFrame
+# ------------------- Save Results -------------------
 df = pd.DataFrame(news_data)
-
-# Save to JSON file
 df.to_json("non_company_news.json", orient="records", indent=4)
+
+if failed_params:
+    pd.DataFrame(failed_params, columns=["params", "error"]).to_csv("failed_news_fetches.csv", index=False)
+
+print("✅ News data saved. Errors (if any) logged.")

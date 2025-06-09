@@ -34,20 +34,24 @@ for submission in submissions:
     submission_id = submission.id
     submission_title = submission.title
     submission_utc = submission.created_utc
+    submission_body = submission.selftext
 
     submission_contents = reddit.submission(id=submission_id)
+    submission_contents.comments.replace_more(limit=None)  # Load all comments
     
+    # Fetch all comments for the submission
     all_comments = submission_contents.comments.list()
 
+    # Iterate through each comment and collect data
     for comment in all_comments:
         comment_data = {
             "submission_id": submission_id,
             "submission_title": submission_title,
             "submission_utc": submission_utc,
+            "submission_body": submission_body,
             "comment_id": comment.id,
             "comment_body": comment.body,
-            "comment_score": comment.score,
-            "created_utc": comment.created_utc
+            "comment_utc": comment.created_utc,
         }
         submissions_data.append(comment_data)
 
