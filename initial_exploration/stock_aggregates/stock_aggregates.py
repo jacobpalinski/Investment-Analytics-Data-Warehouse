@@ -47,21 +47,21 @@ with open(output_file, mode="w", newline="") as f:
     # Define message handler
     def handle_msg(msgs: List[WebSocketMessage]):
         for m in msgs:
-			writer.writerow({
-			"ticker_symbol": m.sym, # Ticker symbol
-			"timestamp": m.e, # End timestamp of aggregate window
-			"volume": m.v, # Ticker volume
-            "accumulated_volume": m.av, # Accumulated volume
-            "volume_weighted_average_price": m.vw, # Volume weighted average price
-            "closing_tick_price": m.c, # Closing tick price
-            "average_trade_size": m.z # Average trade size
-			})
-			print(f"Saved: {m.ticker} @ {m.timestamp}")
+            writer.writerow({
+                "ticker_symbol": m.symbol, # Ticker symbol
+                "timestamp": m.end_timestamp, # End timestamp of aggregate window
+                "volume": m.volume, # Ticker volume
+                "accumulated_volume": m.accumulated_volume, # Accumulated volume
+                "volume_weighted_average_price": m.vwap, # Volume weighted average price
+                "closing_tick_price": m.close, # Closing tick price
+                "average_trade_size": m.average_size # Average trade size
+            })
+            print(f"Saved: {m.symbol} @ {m.end_timestamp}")
 
         # Stop after 10 minutes
         if time.time() - start_time > run_duration:
             print("30 minutes reached. Closing WebSocket.")
-            ws_client.close_connection()
+            ws_client.close()
 
     # Run WebSocket with handler
     ws_client.run(handle_msg)

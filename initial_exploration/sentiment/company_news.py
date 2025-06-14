@@ -14,7 +14,7 @@ polygon_api_key = os.getenv("POLYGON_API_KEY")
 client = RESTClient(polygon_api_key)
 
 # Load ticker symbols from CSV
-df = pd.read_csv("nasdaq_listed_symbols_20250528.csv")
+df = pd.read_csv("../stock_aggregates/nasdaq_listed_symbols_20250528.csv")
 tickers = df['Symbol'].dropna().tolist()
 
 # Store news data in a list
@@ -22,11 +22,12 @@ news_data = []
 
 # Fetch news for each ticker
 for ticker in tickers:
+    print(ticker)
     try:
         # Fetch news for the ticker
         news = client.list_ticker_news(
             ticker=ticker,
-            published_utc_gte='2025-02-28',
+            published_utc_gte='2025-03-09',
             order="asc",
             limit=1000,
             sort="published_utc")
