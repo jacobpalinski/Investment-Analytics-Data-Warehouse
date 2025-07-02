@@ -22,6 +22,8 @@ default_args = {
 # Set paths to SQL files
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MERGE_SQL_PATH = os.path.join(BASE_DIR, 'sql', 'merge_company_information.sql')
+UPDATE_DIM_COMPANY = os.path.join(BASE_DIR, 'sql', 'update_current_dim_company.sql')
+INSERT_DIM_COMPANY = os.path.join(BASE_DIR, 'sql', 'insert_dim_company.sql')
 
 # Define the DAG
 with DAG('company_dimension_dag',
@@ -42,6 +44,24 @@ with DAG('company_dimension_dag',
         sql=MERGE_SQL_PATH,
         snowflake_conn_id='snowflake_raw_connection'
     )
+
+    update_current_dim_company = SnowflakeOperator(
+        task_id="update_current_dim_company",
+        sql=UPDATE_DIM_COMPANY,
+        snowflake_conn_id='snowflake_analytics_connection'
+    )
+
+    insert_dim_company = SnowflakeOperator(
+        task_id="insert_dim_company",
+        sql=INSERT_DIM_COMPANY,
+        snowflake_conn_id='snowflake_analytics_connection'
+    )
+
+    
+
+
+
+
 
     
 
