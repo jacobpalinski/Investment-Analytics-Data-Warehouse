@@ -1,6 +1,9 @@
 # Import necessary libraries
 import os
+import json
 import io
+from datetime import datetime, date
+from dateutil.relativedelta import relativedelta
 import requests
 import boto3
 import pandas as pd
@@ -10,11 +13,11 @@ from polygon import RESTClient
 import finnhub
 import time
 from dotenv import load_dotenv
-from utils.utils import create_snowflake_connection, s3_get_object
+from utils.utils import create_snowflake_connection, s3_get_object, s3_put_object
 
 def extract_company_info():
     """
-    Extracts company information from Finnhub API and loads it into Snowflake.
+    Extracts company information from Finnhub and Polygon API and loads it into Snowflake.
     """
 
     # Load environment variables
@@ -23,7 +26,7 @@ def extract_company_info():
     # Create snowflake connection
     snowflake_conn = create_snowflake_connection(
         user=os.getenv("SNOWFLAKE_USER"),
-        password=os.getenv("SNOWFLAKE_PASSWORD"),
+        private_key_encoded=os.getenv("SNOWFLAKE_PRIVATE_KEY_B64"),
         account=os.getenv("SNOWFLAKE_ACCOUNT"),
         warehouse='INVESTMENT_ANALYTICS_DWH',
         database='INVESTMENT_ANALYTICS',
@@ -44,15 +47,15 @@ def extract_company_info():
     polygon_client = RESTClient(polygon_api_key)
     company_info = []
 
-    for ticker in tickers[:100]:  # Limit to first 100 tickers for testing
+    for ticker in tickers[:500]:  # Limit to first 500 tickers for testing
         try:
             finnhub_response = finnhub_client.company_profile2(symbol=ticker)
             polygon_response = polygon_client.get_ticker_details(ticker)
     
-        # Check if the response is valid
+            # Check if the response is valid
             if not (finnhub_response and polygon_response):    
                 print(f"No data found for {ticker}")
-                continue 
+                continue
 
             company_info.append({
                 "cik": getattr(polygon_response, "cik", None),
@@ -74,6 +77,15 @@ def extract_company_info():
     company_info_df.columns = map(str.upper, company_info_df.columns)  # Convert column names to uppercase
     success, nchunks, nrows, _ = write_pandas(snowflake_conn, company_info_df, table_name="RAW_COMPANY_INFORMATION", database=os.getenv("SNOWFLAKE_DATABASE"), schema=os.getenv("SNOWFLAKE_RAW_SCHEMA"))
     print(f"Loaded {nrows} rows. Success: {success}")
+
+    '''# Retrieve todays date and convert to string format
+    today = datetime.now().strftime('%Y-%m-%d')
+
+    # Update metadata with current run date
+    metadata = s3_get_object(bucket=os.getenv('AWS_S3_BUCKET'), key='metadata.json')
+    metadata = json.loads(metadata['Body'].read().decode('utf-8'))
+    metadata['company_dimension'] = today
+    s3_put_object(bucket=os.getenv('AWS_S3_BUCKET'), key='metadata.json', data=json.dumps(metadata).encode('utf-8'))'''
 
 
 

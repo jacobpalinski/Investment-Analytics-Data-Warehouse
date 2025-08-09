@@ -1,12 +1,12 @@
 # Import necessary libraries
+import os
 from datetime import datetime, timedelta
 from utils.utils import read_sql_file
 from company_dimension.company_info_extraction import extract_company_info
-from company_dimension.data_quality_checks_outcomes import fail_if_data_quality_tests_failed
+from data_quality_checks_outcomes import fail_if_data_quality_tests_failed
 from airflow.sdk import DAG
 from airflow.providers.standard.operators.python import PythonOperator
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
-import os
 
 # Define default arguments for the DAG
 default_args = {
@@ -26,10 +26,10 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MERGE_SQL_PATH = os.path.join(BASE_DIR, 'sql', 'merge_company_information.sql')
 UPDATE_DIM_COMPANY = os.path.join(BASE_DIR, 'sql', 'update_current_dim_company.sql')
 INSERT_DIM_COMPANY = os.path.join(BASE_DIR, 'sql', 'insert_dim_company.sql')
-DATA_QUALITY_TESTS_STAGING = os.path.join(BASE_DIR, 'sql', 'data_quality_tests_staging.sql')
-DATA_QUALITY_TESTS_DIMENSION = os.path.join(BASE_DIR, 'sql', 'data_quality_tests_dimension.sql')
-DATA_QUALITY_STAGING_FAIL_PATH = os.path.join(BASE_DIR, 'sql', 'data_quality_staging_fail.sql')
-DATA_QUALITY_DIMENSION_FAIL_PATH = os.path.join(BASE_DIR, 'sql', 'data_quality_dimension_fail.sql')
+DATA_QUALITY_TESTS_STAGING = os.path.join(BASE_DIR, 'sql', 'data_quality_tests_staging_company_information.sql')
+DATA_QUALITY_TESTS_DIMENSION = os.path.join(BASE_DIR, 'sql', 'data_quality_tests_dim_company.sql')
+DATA_QUALITY_STAGING_FAIL_PATH = os.path.join(BASE_DIR, 'sql', 'data_quality_staging_company_information_fail.sql')
+DATA_QUALITY_DIMENSION_FAIL_PATH = os.path.join(BASE_DIR, 'sql', 'data_quality_dim_company_fail.sql')
 
 # Read SQL contents
 MERGE_SQL = read_sql_file(MERGE_SQL_PATH)
@@ -49,10 +49,10 @@ with DAG(dag_id='company_dimension_dag',
     tags=['company', 'dimension', 'snowflake']
 ):
     
-    '''extraction = PythonOperator(
+    extraction = PythonOperator(
         task_id='extraction',
         python_callable=extract_company_info
-    ) '''
+    )
 
     merge_raw_company_information = SQLExecuteQueryOperator(
         task_id="merge_raw_company_information",
@@ -104,8 +104,7 @@ with DAG(dag_id='company_dimension_dag',
     )
 
     # Define task dependencies
-    #extraction 
-    merge_raw_company_information >> data_quality_tests_staging >> data_quality_tests_staging_fail >> update_current_dim_company >> insert_dim_company \
+    extraction >> merge_raw_company_information >> data_quality_tests_staging >> data_quality_tests_staging_fail >> update_current_dim_company >> insert_dim_company \
     >> data_quality_tests_dimension >> data_quality_tests_dimension_fail
 
     

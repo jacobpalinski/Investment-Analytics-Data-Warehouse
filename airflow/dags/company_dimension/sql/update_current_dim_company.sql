@@ -1,7 +1,7 @@
-update investment_analytics.analytics.dim_company d
+update investment_analytics.analytics.dim_company as d
 set is_current = false,
 effective_end = current_date
-from investment_analytics.staging.staging_company_information s
+from investment_analytics.staging.staging_company_information as s
 where d.cik = s.cik
 and d.is_current = true
 and (
