@@ -10,7 +10,7 @@ count(*) AS failed_count,
 case when count(*) = 0 then 'PASS' else 'FAIL' end,
 current_timestamp
 from (
-select financials_key
+select period_key
 from investment_analytics.financials.dim_period
 group by period_key
 having count(*) > 1

@@ -18,7 +18,7 @@ df = pd.read_csv("nasdaq_listed_symbols_20250528.csv")
 tickers = [f"AM.{t}" for t in df['Symbol'].dropna().tolist()]
 
 # Kafka config
-KAFKA_BOOTSTRAP_SERVERS = "kafka-1:9092,kafka-2:9092,kafka-3:9092"
+KAFKA_BOOTSTRAP_SERVERS = "kafka-1:9092"
 KAFKA_TOPIC = "stock_aggregates"
 
 # Kafka producer setup

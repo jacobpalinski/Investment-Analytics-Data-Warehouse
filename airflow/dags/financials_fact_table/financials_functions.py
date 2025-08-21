@@ -31,7 +31,7 @@ def polygon_parse_response(response: dict, cik: str, financials_data: list) -> N
     """
     
     for result in response:
-        fiscal_year = result.fiscal_year
+        fiscal_year = int(result.fiscal_year)
         fiscal_quarter = result.fiscal_period
         filing_date = result.filing_date
 
@@ -222,6 +222,8 @@ def polygon_parse_response(response: dict, cik: str, financials_data: list) -> N
             item=cash_flow_statement.net_cash_flow,
             financials_data=financials_data
         )
+    
+    return financials_data
 
 def parse_response_sec_api(response: dict, cik: str, financials_data: list) -> None:
     """
@@ -237,33 +239,47 @@ def parse_response_sec_api(response: dict, cik: str, financials_data: list) -> N
 
     # Dict with keys to filter for in response
     filter_keys = {
-    'Revenues': 'income_statement', 'GrossProfit': 'income_statement', 'OperatingIncomeLoss': 'income_statement', 'NetIncomeLoss': 'income_statement', 
-    'EarningsPerShareBasic': 'income_statement', 'EarningsPerShareDiluted': 'income_statement', 'OperatingExpenses': 'income_statement', 
-    'IncomeTaxExpenseBenefit': 'income_statement', 'Assets': 'balance_sheet', 'Liabilities': 'balance_sheet', 'StockholdersEquity': 'balance_sheet', 
-    'AssetsCurrent': 'balance_sheet', 'LiabilitiesCurrent': 'balance_sheet', 'LiabilitiesNoncurrent': 'balance_sheet', 
-    'NetCashProvidedByUsedInOperatingActivities': 'cash_flow_statement', 'NetCashProvidedByUsedInInvestingActivities': 'cash_flow_statement', 
-    'NetCashProvidedByUsedInFinancingActivities': 'cash_flow_statement'}
+    'Revenues': ['revenues', 'income_statement'], 'GrossProfit': ['gross_profit', 'income_statement'], 'OperatingIncomeLoss': ['operating_income', 'income_statement'], 
+    'NetIncomeLoss': ['net_income', 'income_statement'], 
+    'EarningsPerShareBasic': ['basic_earnings_per_share','income_statement'], 'EarningsPerShareDiluted': ['diluted_earnings_per_share', 'income_statement'], 
+    'OperatingExpenses': ['operating_expenses', 'income_statement'], 'IncomeTaxExpenseBenefit': ['income_tax_benefit', 'income_statement'], 
+    'Assets': ['assets','balance_sheet'], 'Liabilities': ['liabilities','balance_sheet'], 'StockholdersEquity': ['equity','balance_sheet'], 
+    'AssetsCurrent': ['current_assets', 'balance_sheet'] , 'LiabilitiesCurrent': ['current_liabilities', 'balance_sheet'], 
+    'LiabilitiesNoncurrent': ['noncurrent_liabilities','balance_sheet'], 
+    'NetCashProvidedByUsedInOperatingActivities': ['net_cash_flow_from_operating_activities', 'cash_flow_statement'], 
+    'NetCashProvidedByUsedInInvestingActivities': ['net_cash_flow_from_investing_activities', 'cash_flow_statement'], 
+    'NetCashProvidedByUsedInFinancingActivities': ['net_cash_flow_from_financing_activities', 'cash_flow_statement']}
     
     # Iterate through relevant filter keys in the response
-    for key, value in filter_keys.items():
-        if not response.get(key):
+    for key, values in filter_keys.items():
+        fact_data = response.get(key)
+        if not fact_data:
+            continue
+
+        units = fact_data.get('units')
+        if not units:
             continue
         
         # Only retrieve first currency in the response
-        first_currency = next(iter(response['units']))
-        last_record = response['units'][first_currency][key][-1]
+        first_currency = next(iter(units))
+        if not units[first_currency]:
+            continue
+        
+        last_record = units[first_currency][-1]
         
         # Retrieve key information
         cik = cik
         fiscal_year = last_record.get('fy')
         fiscal_quarter = last_record.get('fp')
         filing_date = last_record.get('filed')
-        financial_statement = value
-        item = key
+        financial_statement = values[1]
+        item = values[0]
         currency = first_currency
         value = last_record.get('val')
         
         financials_data.append({'cik': cik, 'fiscal_year': fiscal_year, 'fiscal_quarter': fiscal_quarter, 'filing_date': filing_date, 'financial_statement': financial_statement, 'item': key, 'currency': currency, 'value': value})
+
+    return financials_data
 
 
 

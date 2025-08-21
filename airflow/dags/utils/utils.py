@@ -1,12 +1,13 @@
 # Import necessary libraries
 import datetime
 import os
+import base64
 import json
 import boto3
 import snowflake.connector
 from dotenv import load_dotenv
 
-def create_snowflake_connection(user: str, password: str, account: str, warehouse: str, database: str, schema: str) -> snowflake.connector.SnowflakeConnection:
+def create_snowflake_connection(user: str, account: str, private_key_encoded: bytes, warehouse: str, database: str, schema: str) -> snowflake.connector.SnowflakeConnection:
     """
     Creates a Snowflake connection using the provided credentials.
     
@@ -21,9 +22,11 @@ def create_snowflake_connection(user: str, password: str, account: str, warehous
     Returns:
         snowflake.connector.SnowflakeConnection: A connection object to interact with Snowflake.
     """
+    private_key_decoded = base64.b64decode(private_key_encoded)
+
     return snowflake.connector.connect(
         user=user,
-        password=password,
+        private_key=private_key_decoded,
         account=account,
         warehouse=warehouse,
         database=database,
@@ -44,6 +47,18 @@ def s3_get_object(bucket: str, key: str) -> dict:
     s3 = boto3.client('s3', aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"), aws_secret_access_key=os.getenv("AWS_SECRET"))
     return s3.get_object(Bucket=bucket, Key=key)
 
+def s3_put_object(bucket: str, key: str, data: dict) -> None:
+    """
+    Puts an object into an S3 bucket.
+
+    Args:
+        bucket (str): The name of the S3 bucket.
+        key (str): The key for the object to put.
+        data (bytes): The data to write to the S3 object.
+    """
+    s3 = boto3.client('s3', aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"), aws_secret_access_key=os.getenv("AWS_SECRET"))
+    s3.put_object(Bucket=bucket, Key=key, Body=data)
+
 def read_sql_file(file_path: str) -> str:
     """
     Reads a SQL file and returns its content.
@@ -56,21 +71,4 @@ def read_sql_file(file_path: str) -> str:
     """
     with open(file_path, 'r') as file:
         return file.read()
-
-def company_financials_extraction_helper(cik: str, fiscal_year: int, fiscal_quarter: int, financial_statement: str, key: str, json_path: json, financials_data: list) -> dict:
-    """
-    Helper function to extract financial data from a JSON response.
-
-    Args:
-        financial_statement (str): The type of financial statement (e.g., 'income_statement').
-        key (str): The key to extract from the JSON.
-        json_path (json): The JSON object containing the financial data.
-
-    Returns:
-        dict: A dictionary containing the extracted financial data.
-    """
-    value = json_path.get('value')
-    currency = json_path.get('unit', 'USD')
-    if value is not None:
-        financials_data.append((cik, fiscal_year, fiscal_quarter, financial_statement, key, currency, value))
 

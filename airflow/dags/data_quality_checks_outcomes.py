@@ -14,7 +14,7 @@ def fail_if_data_quality_tests_failed(sql_string:str, schema:str, table_name:str
     # Create snowflake connection
     snowflake_conn = create_snowflake_connection(
         user=os.getenv("SNOWFLAKE_USER"),
-        password=os.getenv("SNOWFLAKE_PASSWORD"),
+        private_key_encoded=os.getenv("SNOWFLAKE_PRIVATE_KEY_B64"),
         account=os.getenv("SNOWFLAKE_ACCOUNT"),
         warehouse='INVESTMENT_ANALYTICS_DWH',
         database='INVESTMENT_ANALYTICS',

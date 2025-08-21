@@ -1,13 +1,13 @@
 merge into investment_analytics.staging.staging_financials as target
 using (
-    select * 
+    select 
+    *
     from investment_analytics.raw.raw_financials
 ) as source
 on target.cik = source.cik
    and target.fiscal_year = source.fiscal_year
    and target.fiscal_quarter = source.fiscal_quarter
    and target.item = source.item
-   and target.value = source.value
    and target.currency = source.currency
    and target.filing_date = source.filing_date
 

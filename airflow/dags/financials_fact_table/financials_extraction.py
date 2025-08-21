@@ -9,7 +9,7 @@ from snowflake.connector.pandas_tools import write_pandas
 from polygon import RESTClient
 from dotenv import load_dotenv
 from utils.utils import create_snowflake_connection, s3_get_object, s3_put_object
-from financials_dimension.financials_functions import polygon_parse_response, parse_response_sec_api
+from financials_fact_table.financials_functions import polygon_parse_response, parse_response_sec_api
 
 def extract_financials():
     '''Extracts company financials data from Polygon API and loads it into Snowflake.'''
@@ -32,7 +32,7 @@ def extract_financials():
                        select 
                        distinct 
                        cik 
-                       from investment_analytics.analytics.dim_company
+                       from investment_analytics.core.dim_company
                        where is_current = TRUE """)
         ciks = [row[0] for row in cursor.fetchall()]
     
@@ -44,9 +44,10 @@ def extract_financials():
     three_months_prior_str = three_months_prior.strftime('%Y-%m-%d')
 
     # Retrieve the date of last run of financials_dimension DAG
-    metadata = s3_get_object(bucket=os.getenv('AWS_S3_BUCKET'), key='metadata.json')
+    ''' metadata = s3_get_object(bucket=os.getenv('AWS_S3_BUCKET'), key='metadata.json')
     metadata = json.loads(metadata['Body'].read().decode('utf-8'))
-    latest_run_date = metadata.get('financials_dimension', three_months_prior_str)
+    latest_run_date = metadata.get('financials_dimension', three_months_prior_str) '''
+    latest_run_date = three_months_prior_str
 
     # Initialise Polygon API client
     polygon_api_key = os.getenv("POLYGON_API_KEY")
@@ -77,19 +78,20 @@ def extract_financials():
                     print(f"Failed to retrieve data for CIK: {cik}, Status Code: {response.status_code}")
                     continue
                 
-                data = response.json()['facts']['us-gaap']
+                facts = response.json().get('facts', {})
+                data = facts.get('us-gaap') or facts.get('ifrs-full', {})
                 parse_response_sec_api(response=data, cik=cik, financials_data=financials_data)
 
             elif quarterly_financials_response and not annual_financials_response:
-                financials_data = polygon_parse_response(quarterly_financials_response, cik)
+                polygon_parse_response(response=quarterly_financials_response, cik=cik, financials_data=financials_data)
                 print('Parsed')
             
             elif not quarterly_financials_response and annual_financials_response:
-                financials_data = polygon_parse_response(annual_financials_response, cik)
+                polygon_parse_response(response=annual_financials_response, cik=cik, financials_data=financials_data)
             
             else:
-                financials_data = polygon_parse_response(quarterly_financials_response, cik)
-                financials_data += polygon_parse_response(annual_financials_response, cik)     
+                polygon_parse_response(response=quarterly_financials_response, cik=cik, financials_data=financials_data)
+                polygon_parse_response(response=annual_financials_response, cik=cik, financials_data=financials_data)     
         
         except Exception as e:
             print(f"Error extracting financials for {cik}: {e}")
@@ -100,7 +102,7 @@ def extract_financials():
     # Load financials data into Snowflake
     financials_df = pd.DataFrame(financials_data)
     financials_df.columns = map(str.upper, financials_df.columns)  # Convert column names to uppercase
-    success, nchunks, nrows, _ = write_pandas(snowflake_conn, financials_df, table_name="RAW_FINANCIALS", database=os.getenv("SNOWFLAKE_DATABASE"), schema=os.getenv("SNOWFLAKE_RAW_SCHEMA"))
+    success, nchunks, nrows, _ = write_pandas(snowflake_conn, financials_df, table_name="RAW_FINANCIALS")
     print(f"Loaded {nrows} rows. Success: {success}")
 
     # Update metadata with current run date

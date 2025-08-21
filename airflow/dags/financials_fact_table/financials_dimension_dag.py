@@ -2,7 +2,7 @@
 import os
 from datetime import datetime, timedelta
 from utils.utils import read_sql_file
-from financials_dimension.financials_extraction import extract_financials
+from financials_fact_table.financials_extraction import extract_financials
 from data_quality_checks_outcomes import fail_if_data_quality_tests_failed
 from airflow.sdk import DAG
 from airflow.providers.standard.operators.python import PythonOperator
@@ -27,29 +27,35 @@ INSERT_STAGING_FINANCIALS_PATH = os.path.join(BASE_DIR, 'sql', 'insert_staging_f
 MOST_RECENT_RECORDS_PATH = os.path.join(BASE_DIR, 'sql', 'keep_most_recent_record.sql')
 DELETE_RECORDS_PATH = os.path.join(BASE_DIR, 'sql', 'delete_records.sql')
 DERIVE_RATIOS_PATH = os.path.join(BASE_DIR, 'sql', 'derive_ratios.sql')
-RENAME_ITEMS_PATH = os.path.join(BASE_DIR, 'sql', 'rename_items.sql')
+DELETE_NULL_RATIOS_PATH = os.path.join(BASE_DIR, 'sql', 'delete_null_ratios.sql')
 POPULATE_QUARTER_PATH = os.path.join(BASE_DIR, 'sql', 'populate_quarter.sql')
-INSERT_DIM_FINANCIALS = os.path.join(BASE_DIR, 'sql', 'insert_dim_financials.sql')
-DATA_QUALITY_TESTS_STAGING = os.path.join(BASE_DIR, 'sql', 'data_quality_tests_staging_financials.sql')
-DATA_QUALITY_TESTS_DIMENSION = os.path.join(BASE_DIR, 'sql', 'data_quality_tests_dim_financials.sql')
+INSERT_DIM_PERIOD_PATH = os.path.join(BASE_DIR, 'sql', 'insert_dim_period.sql')
+INSERT_FACT_FINANCIALS_PATH = os.path.join(BASE_DIR, 'sql', 'insert_fact_financials.sql')
+DATA_QUALITY_TESTS_STAGING_PATH = os.path.join(BASE_DIR, 'sql', 'data_quality_tests_staging_financials.sql')
+DATA_QUALITY_TESTS_FACT_PATH = os.path.join(BASE_DIR, 'sql', 'data_quality_tests_fact_financials.sql')
+DATA_QUALITY_TESTS_DIMENSION_PATH = os.path.join(BASE_DIR, 'sql', 'data_quality_tests_dim_period.sql')
 DATA_QUALITY_STAGING_FAIL_PATH = os.path.join(BASE_DIR, 'sql', 'data_quality_staging_financials_fail.sql')
-DATA_QUALITY_DIMENSION_FAIL_PATH = os.path.join(BASE_DIR, 'sql', 'data_quality_dim_financials_fail.sql')
+DATA_QUALITY_TESTS_DIMENSION_FAIL_PATH = os.path.join(BASE_DIR, 'sql', 'data_quality_dim_period_fail.sql')
+DATA_QUALITY_FACT_FAIL_PATH = os.path.join(BASE_DIR, 'sql', 'data_quality_fact_financials_fail.sql')
 
 # Read SQL contents
 INSERT_STAGING_FINANCIALS = read_sql_file(INSERT_STAGING_FINANCIALS_PATH)
 MOST_RECENT_RECORDS = read_sql_file(MOST_RECENT_RECORDS_PATH)
 DELETE_RECORDS = read_sql_file(DELETE_RECORDS_PATH)
-RENAME_ITEMS = read_sql_file(RENAME_ITEMS_PATH)
 DERIVE_RATIOS = read_sql_file(DERIVE_RATIOS_PATH)
+DELETE_NULL_RATIOS = read_sql_file(DELETE_NULL_RATIOS_PATH)
 POPULATE_QUARTER = read_sql_file(POPULATE_QUARTER_PATH)
-INSERT_DIM = read_sql_file(INSERT_DIM_FINANCIALS)
-DQ_STAGING_SQL = read_sql_file(DATA_QUALITY_TESTS_STAGING)
-DQ_DIM_SQL = read_sql_file(DATA_QUALITY_TESTS_DIMENSION)
+INSERT_DIM_PERIOD = read_sql_file(INSERT_DIM_PERIOD_PATH)
+INSERT_FACT_FINANCIALS = read_sql_file(INSERT_FACT_FINANCIALS_PATH)
+DQ_STAGING_SQL = read_sql_file(DATA_QUALITY_TESTS_STAGING_PATH)
+DQ_FACT_SQL = read_sql_file(DATA_QUALITY_TESTS_FACT_PATH)
+DQ_DIM_SQL = read_sql_file(DATA_QUALITY_TESTS_DIMENSION_PATH)
 DQ_STAGING_FAIL = read_sql_file(DATA_QUALITY_STAGING_FAIL_PATH)
-DQ_DIM_FAIL = read_sql_file(DATA_QUALITY_DIMENSION_FAIL_PATH)
+DQ_FACT_FAIL = read_sql_file(DATA_QUALITY_STAGING_FAIL_PATH)
+DQ_DIM_FAIL = read_sql_file(DATA_QUALITY_TESTS_DIMENSION_FAIL_PATH)
 
 # Define the DAG
-with DAG(dag_id='financials_dimension_dag',
+with DAG(dag_id='financials_fact_dag',
     default_args=default_args,
     description='DAG to create dim_company table in Snowflake',
     schedule='@monthly',
@@ -74,12 +80,6 @@ with DAG(dag_id='financials_dimension_dag',
         conn_id='snowflake_connection'
     )
 
-    rename_items = SQLExecuteQueryOperator(
-        task_id="rename_items",
-        sql=RENAME_ITEMS,
-        conn_id='snowflake_connection'
-    )
-
     delete_records = SQLExecuteQueryOperator(
         task_id="delete_records",
         sql=DELETE_RECORDS,
@@ -89,6 +89,12 @@ with DAG(dag_id='financials_dimension_dag',
     derive_ratios = SQLExecuteQueryOperator(
         task_id="derive_ratios",
         sql=DERIVE_RATIOS,
+        conn_id='snowflake_connection'
+    )
+
+    delete_null_ratios = SQLExecuteQueryOperator(
+        task_id="delete_null_ratios",
+        sql=DELETE_NULL_RATIOS,
         conn_id='snowflake_connection'
     )
 
@@ -113,9 +119,15 @@ with DAG(dag_id='financials_dimension_dag',
         }
     )
 
-    insert_dim_company = SQLExecuteQueryOperator(
-        task_id="insert_dim_company",
-        sql=INSERT_DIM,
+    insert_dim_period = SQLExecuteQueryOperator(
+        task_id="insert_dim_period",
+        sql=INSERT_DIM_PERIOD,
+        conn_id='snowflake_connection'
+    )
+
+    insert_fact_financials = SQLExecuteQueryOperator(
+        task_id="insert_fact_financials",
+        sql=INSERT_FACT_FINANCIALS,
         conn_id='snowflake_connection'
     )
 
@@ -130,14 +142,29 @@ with DAG(dag_id='financials_dimension_dag',
         python_callable=fail_if_data_quality_tests_failed,
         op_kwargs={
             'sql_string': DQ_DIM_FAIL,
-            'schema': 'ANALYTICS',
-            'table_name': 'dim_financials'
+            'schema': 'FINANCIALS',
+            'table_name': 'dim_period'
         }
     )
 
+    data_quality_tests_fact = SQLExecuteQueryOperator(
+        task_id="data_quality_tests_fact_financials",
+        sql=DQ_FACT_SQL,
+        conn_id='snowflake_connection'
+    )
+
+    data_quality_tests_fact_fail = SQLExecuteQueryOperator(
+        task_id="data_quality_tests_fact_fail",
+        sql=DQ_FACT_FAIL,
+        conn_id='snowflake_connection'
+    )
+
     # Define task dependencies
-    extraction >> insert_staging_financials >> keep_most_recent_record >> rename_items >> delete_records >> derive_ratios >> populate_quarter >> data_quality_tests_staging \
-    >> data_quality_tests_staging_fail >> insert_dim_company >> data_quality_tests_dimension >> data_quality_tests_dimension_fail
+    extraction >> insert_staging_financials \
+    >> keep_most_recent_record >> delete_records >> derive_ratios >> delete_null_ratios \
+    >> populate_quarter >> data_quality_tests_staging \
+    >> data_quality_tests_staging_fail >> insert_dim_period >> insert_fact_financials >> data_quality_tests_dimension >> data_quality_tests_dimension_fail >> data_quality_tests_fact \
+    >> data_quality_tests_fact_fail
 
     
 

@@ -19,7 +19,7 @@ having count(*) > 1
 -- Check there are no null values for period_key and company_key
 insert into investment_analytics.data_quality.data_quality_results
 select
-"Null Surrogate Keys",
+'Null Surrogate Keys',
 'FINANCIALS.FACT_FINANCIALS',
 count(*) AS failed_count,
 case when count(*) = 0 then 'PASS' else 'FAIL' end,
