@@ -1,0 +1,17 @@
+{
+    "name": "snowflake-connector-stock-aggregates",
+    "config": {
+        "connector.class": "com.snowflake.kafka.connector.SnowflakeSinkConnector",
+        "tasks.max": "1",
+        "topics": "stock_aggregates_raw",
+        "snowflake.url.name": "VIUVYPZ-EI22623.snowflakecomputing.com",
+        "snowflake.user.name": "JACOBPALINSKI",
+        "snowflake.private.key": "MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQC1T/ihkAw71DfULb4QOHCkuBp2ymEESq4TkQczwHz0sSKqjS2MChbuiafm/8Vs4qwZJ5nqlv3t/PiwjzkQFFERXTWrdTPimMxBmjC8L8OdCtoBWlzkEBwDiL518M/V/2iEG9/OovaiZyQWPHZRF2D5rIKDuzhehYfwCOGNS6Wf1GwdVsqhGMo7zT2GVlMVt1KfVudeMbHPLjTkLDSmUG7Nh5UCmsps7kMnk8g0/bYW2UsxX1orB4nNT/ZJHb5sYGTF5C0aQRGeNTAIrAGdfTxjdBDrh6NWLJtZNYG2riryoqjOXy9shJDzPXbPkaqYEEnhcFKZL93DGCtPJ6TiG0mvAgMBAAECggEACSM3xtpiek8jHJU6uBH7iQh+OqeGHCpnVuv16hpZVmAyanzcGjTxHA/hqKTti+z7+tG0G4Vgi1cSKFPGXG/y0698mYU6CC8vwKfG9iKyG1pOXcepNILtnVtpK5YwdY0Qh2EN9nUpNEqnjcmeSE7MLX/rCs9iYQWwn5OubumsfyzvoxqAcFdZbYhxaWPHI0QpLOspCPOVJJfI+VgVXmf5B7ux9Y3FdZt+FVTcy0eK5HtSPQ+g506omGAaZ3vr0N9VvwyOpNMNzWeVfjPFvQztWVPNT53X4ORO4t2Nyxskm0XVtMoTUTUK3vDObULji1hcizZTUefu5TwMcV9W3ZDGgQKBgQDtA+pMn0u9x9GNSrqSUmKGlp4lH0hNTlPkrRupu33dSnCXejDBBgf2WHwUe3E41XO4BnVvpJc+WGW8L6oMN4IMmtRjtx8mIjQabaHVFk9sNvFoNobmMC8zFcwBGv6IUrq9xpkzPvreeVnrZVoNRlw3o/N2JLHQROu8KkWaBBRwDQKBgQDD1dj+2YNM6omAFGhVvgbEVRjZ2BCxd4YsKd9kJate3cj/B9ClZcNKQ8qmEoCsKEogEiS29viKVfIpNl7jtM0tmOavxMtwJMbteQPYT9/w/uPwMWRulhM3Ki03TN1dkL8YROlSHPH+4Pps6mGKJTLW99FN6Obe8QMz0TwceBj1qwKBgGb5EX1So/yC6NcDBYX2xxmELJciPS5g/m/WibM3YxqWcc5N5wqljSYJEXdwniM8EXd9Tt4/WvpaO3EEIFQIdbb2OZpM//p4V7y3rty+QalZQY6uSfOOMaN3L9e3G6iskLdMpliuXx3zCQ8NTI+B5yTBVVAZ5yr+FpD8qJqedSatAoGAIVbFk1VKUgzXjbNrs7UfB8uI6IUtCllTwS77tdvn2cWeEzSsY4v4fCsgU7dwql5NiDouf+t5kmthR3zXGKLOD0Ypd6DkFVpdd04Txn6KnEd4XIq8E0t/R/PpMLHoOaaLscEBi5Yb6I06dNJN+qushQY5Xq8YprmXFvo25o3XifMCgYBKPaioSDHDeQPYSaeY7bEZeddYLEoi71bYamYtgBfhPIfBoX6tlL34gchlZM2mYbpTIvLmaslryWGs4t9OAeb+xR6Ljnd6lARkBUpkNiNOflVV2egytBl8Yo8iY7zs7A2zg2OyV38R4nZ4bx1EBn0yfRA5Zs7hg6W656a2pfW4zw==",
+        "snowflake.database.name": "INVESTMENT_ANALYTICS",
+        "snowflake.schema.name": "RAW",
+        "snowflake.topic2table.map": "stock_aggregates_raw:RAW_STOCK_AGGREGATES",
+        "buffer.count.records": "5000",
+        "buffer.flush.time": "60",
+        "buffer.size.bytes": "5000000"
+    }
+}
