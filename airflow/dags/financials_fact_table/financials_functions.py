@@ -1,7 +1,7 @@
 # Import necessary libraries
 import json
 
-def polygon_company_financials_extraction_helper(cik: str, fiscal_year: int, fiscal_quarter: str, filing_date: str, financial_statement: str, key: str, item: type, financials_data: list) -> dict:
+'''def polygon_company_financials_extraction_helper(cik: str, fiscal_year: int, fiscal_quarter: str, filing_date: str, financial_statement: str, key: str, item: type, financials_data: list) -> dict:
     """
     Helper function to extract financial data from a JSON response.
 
@@ -223,7 +223,7 @@ def polygon_parse_response(response: dict, cik: str, financials_data: list) -> N
             financials_data=financials_data
         )
     
-    return financials_data
+    return financials_data'''
 
 def parse_response_sec_api(response: dict, cik: str, financials_data: list) -> None:
     """

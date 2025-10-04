@@ -11,10 +11,7 @@ s.indicator,
 s.value
 from investment_analytics.staging.staging_economic_indicators s
 join investment_analytics.economic_indicators.dim_indicator_date d
-on s.year = d.year
-and s.quarter = d.quarter
-and s.month = d.month
-and s.day = d.day
+on s.date = d.date
 where not exists (
     select 1
     from investment_analytics.economic_indicators.fact_economic_indicators f

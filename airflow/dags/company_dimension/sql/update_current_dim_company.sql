@@ -1,4 +1,4 @@
-update investment_analytics.analytics.dim_company as d
+update investment_analytics.core.dim_company as d
 set is_current = false,
 effective_end = current_date
 from investment_analytics.staging.staging_company_information as s

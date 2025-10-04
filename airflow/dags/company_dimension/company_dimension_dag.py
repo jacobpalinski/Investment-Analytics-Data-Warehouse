@@ -98,7 +98,7 @@ with DAG(dag_id='company_dimension_dag',
         python_callable=fail_if_data_quality_tests_failed,
         op_kwargs={
             'sql_string': DQ_DIM_FAIL,
-            'schema': 'ANALYTICS',
+            'schema': 'CORE',
             'table_name': 'dim_company'
         }
     )

@@ -2,7 +2,7 @@
 import os
 from datetime import datetime, timedelta
 from utils.utils import read_sql_file
-from economic_indicator_dimension.economic_indicator_extraction import extract_economic_indicators
+from economic_indicators_fact_table.economic_indicator_extraction import extract_economic_indicators
 from data_quality_checks_outcomes import fail_if_data_quality_tests_failed
 from airflow.sdk import DAG
 from airflow.providers.standard.operators.python import PythonOperator
@@ -47,7 +47,7 @@ DQ_DIM_FAIL = read_sql_file(DATA_QUALITY_DIMENSION_FAIL_PATH)
 DQ_FACT_FAIL = read_sql_file(DATA_QUALITY_FACT_FAIL_PATH)
 
 # Define the DAG
-with DAG(dag_id='economic_indicators_dimension_dag',
+with DAG(dag_id='economic_indicators_fact_dag',
     default_args=default_args,
     description='DAG to create dim_economic_indicators table in Snowflake',
     schedule='@monthly',

@@ -43,6 +43,7 @@ def extract_economic_indicators():
 
     # Current date information
     today = datetime.now()
+    date = today.date()
     year = today.year
     month_int = today.month
     month_name = today.strftime('%B')
@@ -62,7 +63,7 @@ def extract_economic_indicators():
             print(f"No data found for {indicator}")
             continue
 
-        economic_indicators.append({'year': year, 'quarter': quarter, 'month': month_name, 'day': day, 'indicator': indicator, 'value': value})
+        economic_indicators.append({'date': date, 'year': year, 'quarter': quarter, 'month': month_name, 'day': day, 'indicator': indicator, 'value': value})
         
     # Process and prepare data for Snowflake
     economic_indicators_df = pd.DataFrame(economic_indicators)

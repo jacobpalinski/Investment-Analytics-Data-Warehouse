@@ -47,7 +47,7 @@ def extract_company_info():
     polygon_client = RESTClient(polygon_api_key)
     company_info = []
 
-    for ticker in tickers[:500]:  # Limit to first 500 tickers for testing
+    for ticker in tickers[:200]:  # Limit to first 500 tickers for testing
         try:
             finnhub_response = finnhub_client.company_profile2(symbol=ticker)
             polygon_response = polygon_client.get_ticker_details(ticker)
@@ -70,12 +70,12 @@ def extract_company_info():
 
         print('Extracted company information for: ', ticker)
 
-        time.sleep(1)  # Sleep to handle 60 calls per minute rate limit
+        time.sleep(1.25)  # Sleep to handle 60 calls per minute rate limit
 
     # Ingest data into Snowflake
     company_info_df = pd.DataFrame(company_info)
     company_info_df.columns = map(str.upper, company_info_df.columns)  # Convert column names to uppercase
-    success, nchunks, nrows, _ = write_pandas(snowflake_conn, company_info_df, table_name="RAW_COMPANY_INFORMATION", database=os.getenv("SNOWFLAKE_DATABASE"), schema=os.getenv("SNOWFLAKE_RAW_SCHEMA"))
+    success, nchunks, nrows, _ = write_pandas(snowflake_conn, company_info_df, table_name="RAW_COMPANY_INFORMATION")
     print(f"Loaded {nrows} rows. Success: {success}")
 
     '''# Retrieve todays date and convert to string format

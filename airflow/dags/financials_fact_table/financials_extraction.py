@@ -12,7 +12,7 @@ from utils.utils import create_snowflake_connection, s3_get_object, s3_put_objec
 from financials_fact_table.financials_functions import polygon_parse_response, parse_response_sec_api
 
 def extract_financials():
-    '''Extracts company financials data from Polygon API and loads it into Snowflake.'''
+    '''Extracts company financials data from Polygon API and loads it into Snowflake. '''
     # Load environment variables
     load_dotenv()
 
@@ -50,8 +50,8 @@ def extract_financials():
     latest_run_date = three_months_prior_str
 
     # Initialise Polygon API client
-    polygon_api_key = os.getenv("POLYGON_API_KEY")
-    polygon_client = RESTClient(polygon_api_key)
+    ''' polygon_api_key = os.getenv("POLYGON_API_KEY")
+    polygon_client = RESTClient(polygon_api_key) '''
 
     # Create headers for SEC API requests
     sec_api_headers = {'User-Agent': os.getenv("SEC_API_USER_AGENT")}
@@ -61,7 +61,7 @@ def extract_financials():
 
     for cik in ciks[:500]:
         try:
-            # Retrieve financials data for the current CIK
+            ''' # Retrieve financials data for the current CIK
             quarterly_financials_response = list(polygon_client.vx.list_stock_financials(cik=cik, 
             filing_date_gt=latest_run_date, filing_date_lte=today, timeframe='quarterly',
             include_sources=False, order="desc", limit=1, sort="period_of_report_date"))
@@ -91,7 +91,19 @@ def extract_financials():
             
             else:
                 polygon_parse_response(response=quarterly_financials_response, cik=cik, financials_data=financials_data)
-                polygon_parse_response(response=annual_financials_response, cik=cik, financials_data=financials_data)     
+                polygon_parse_response(response=annual_financials_response, cik=cik, financials_data=financials_data)''' 
+
+        # If not retrieve data from SEC API
+            url = f"https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
+            response = requests.get(url, headers=sec_api_headers, timeout=10)
+            
+            if response.status_code != 200:
+                print(f"Failed to retrieve data for CIK: {cik}, Status Code: {response.status_code}")
+                continue
+            
+            facts = response.json().get('facts', {})
+            data = facts.get('us-gaap') or facts.get('ifrs-full', {})
+            parse_response_sec_api(response=data, cik=cik, financials_data=financials_data)
         
         except Exception as e:
             print(f"Error extracting financials for {cik}: {e}")

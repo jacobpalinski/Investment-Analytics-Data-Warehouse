@@ -15,6 +15,7 @@ from
 from investment_analytics.staging.staging_economic_indicators
 where indicator is null
 or value is null
+or date is null
 or year is null
 or quarter is null
 or month is null);
@@ -28,9 +29,9 @@ count(*) AS failed_count,
 case when count(*) = 0 then 'PASS' else 'FAIL' end,
 current_timestamp
 from 
-(select year, quarter, month, day, indicator, value
+(select date, year, quarter, month, day, indicator, value
 from investment_analytics.staging.staging_economic_indicators
-group by year, quarter, month, day, indicator, value
+group by date, year, quarter, month, day, indicator, value
 having count(*) > 1);
 
 -- Check for any unexpected negative values

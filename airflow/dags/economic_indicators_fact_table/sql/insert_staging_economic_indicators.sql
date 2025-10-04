@@ -4,16 +4,14 @@ using (
     select * 
     from investment_analytics.raw.raw_economic_indicators
 ) as source
-on target.year = source.year
-   and target.quarter = source.quarter
-   and target.month = source.month
-   and target.day = source.day
-   and target.indicator = source.indicator
-   and target.value = source.value
+on target.date = source.date
+and target.indicator = source.indicator
+and target.value = source.value
 
 -- Only insert if a record does not already exist
 when not matched then
 insert (
+    date,
     year,
     quarter,
     month,
@@ -22,6 +20,7 @@ insert (
     value
 )
 values (
+    source.date,
     source.year,
     source.quarter,
     source.month,

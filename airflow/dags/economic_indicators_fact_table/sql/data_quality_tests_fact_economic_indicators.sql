@@ -11,9 +11,11 @@ case when count(*) = 0 then 'PASS' else 'FAIL' end,
 current_timestamp
 from (
 select
-*
+indicator_date_key,
+indicator,
+value
 from investment_analytics.economic_indicators.fact_economic_indicators
-group by economic_indicators_fact_key, indicator_date_key, indicator, value
+group by indicator_date_key, indicator, value
 having count(*) > 1
 );
 

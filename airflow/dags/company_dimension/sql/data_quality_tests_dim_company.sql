@@ -13,6 +13,7 @@ from (
 select cik
 from investment_analytics.core.dim_company
 where is_current = true
+and cik != 'Not Applicable'
 group by cik
 having count(*) > 1
 );
@@ -33,6 +34,8 @@ join investment_analytics.core.dim_company d2
 on d1.cik = d2.cik and d1.company_key <> d2.company_key
 where d1.effective_start <= coalesce(d2.effective_end, CURRENT_DATE)
 and d2.effective_start <= coalesce(d1.effective_end, CURRENT_DATE)
+and d1.cik != 'Not Applicable'
+and d2.cik != 'Not Applicable'
 );
 
 -- Check surrogate key is unique

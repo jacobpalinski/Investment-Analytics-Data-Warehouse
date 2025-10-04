@@ -59,16 +59,3 @@ def s3_put_object(bucket: str, key: str, data: dict) -> None:
     s3 = boto3.client('s3', aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"), aws_secret_access_key=os.getenv("AWS_SECRET"))
     s3.put_object(Bucket=bucket, Key=key, Body=data)
 
-def read_sql_file(file_path: str) -> str:
-    """
-    Reads a SQL file and returns its content.
-
-    Args:
-        file_path (str): The path to the SQL file.
-
-    Returns:
-        str: The content of the SQL file.
-    """
-    with open(file_path, 'r') as file:
-        return file.read()
-

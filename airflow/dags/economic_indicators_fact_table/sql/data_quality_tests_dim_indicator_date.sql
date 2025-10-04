@@ -8,9 +8,13 @@ case when count(*) = 0 then 'PASS' else 'FAIL' end,
 current_timestamp
 from (
 select
-*
+date,
+year,
+quarter,
+month,
+day
 from investment_analytics.economic_indicators.dim_indicator_date
-group by indicator_date_key, year, quarter, month, day
+group by date, year, quarter, month, day
 having count(*) > 1
 );
 
