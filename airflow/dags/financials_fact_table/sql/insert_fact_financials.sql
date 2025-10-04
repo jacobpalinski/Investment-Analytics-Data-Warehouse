@@ -6,8 +6,7 @@ using (
         s.financial_statement,
         s.filing_date,
         s.item,
-        s.currency,
-        s.value
+        s.usd_value
     from investment_analytics.staging.staging_financials s
     join investment_analytics.financials.dim_period p
       on s.fiscal_year = p.fiscal_year
@@ -21,7 +20,6 @@ and f.company_key = t.company_key
 and f.financial_statement = t.financial_statement
 and f.filing_date = t.filing_date
 and f.item = t.item
-and f.currency = t.currency
 
 when not matched then
   insert (
@@ -31,8 +29,7 @@ when not matched then
       financial_statement,
       filing_date,
       item,
-      currency,
-      value
+      usd_value
   )
   values (
       investment_analytics.financials.financials_fact_key_seq.nextval,
@@ -41,8 +38,7 @@ when not matched then
       t.financial_statement,
       t.filing_date,
       t.item,
-      t.currency,
-      t.value
+      t.usd_value
   );
 
 

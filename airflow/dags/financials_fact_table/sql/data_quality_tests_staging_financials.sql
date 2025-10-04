@@ -19,8 +19,7 @@ where cik is null
    or fiscal_quarter is null 
    or financial_statement is null 
    or item is null
-   or currency is null
-   or value is null);
+   or usd_value is null);
 
 -- Check for duplicate rows
 insert into investment_analytics.data_quality.data_quality_results
@@ -31,9 +30,9 @@ count(*) AS failed_count,
 case when count(*) = 0 then 'PASS' else 'FAIL' end,
 current_timestamp
 from 
-(select cik, filing_date, fiscal_year, fiscal_quarter, financial_statement, item, currency, value
+(select cik, filing_date, fiscal_year, fiscal_quarter, financial_statement, item, usd_value
 from investment_analytics.staging.staging_financials
-group by cik, filing_date, fiscal_year, fiscal_quarter, financial_statement, item, currency, value
+group by cik, filing_date, fiscal_year, fiscal_quarter, financial_statement, item, usd_value
 having count(*) > 1);
 
 -- Check for outliers (small and large)
@@ -48,7 +47,7 @@ from
 (select
 *
 from investment_analytics.staging.staging_financials
-where value > 1e12 or value < -1e12);
+where usd_value > 1e12 or usd_value < -1e12);
 
 -- Check for any unexpected negative values
 insert into investment_analytics.data_quality.data_quality_results
@@ -63,7 +62,7 @@ from
 *
 from investment_analytics.staging.staging_financials
 where item in ('revenues', 'assets', 'liabilities', 'current_assets', 'current_liabilities', 'noncurrent_liabilities')
-and value < 0);
+and usd_value < 0);
 
 -- Check for invalid fiscal_year or fiscal_quarter
 insert into investment_analytics.data_quality.data_quality_results

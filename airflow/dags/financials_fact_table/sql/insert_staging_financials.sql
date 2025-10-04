@@ -1,35 +1,41 @@
 merge into investment_analytics.staging.staging_financials as target
 using (
     select 
-    *
-    from investment_analytics.raw.raw_financials
+    rf.cik,
+    rf.filing_date,
+    rf.fiscal_year,
+    rf.fiscal_quarter,
+    rf.financial_statement,
+    rf.item,
+    case when (rf.currency) = 'USD' or (rf.currency) = 'USD / shares' then rf.value
+    else rf.vlaue / ucr.local_conversion_rate end as usd_value
+    from investment_analytics.raw.raw_financials as rf
+    inner join investment_analytics.financials.usd_currency_conversion_rates as ucr
+    on rf.currency = ucr.abbreviation
 ) as source
 on target.cik = source.cik
    and target.fiscal_year = source.fiscal_year
    and target.fiscal_quarter = source.fiscal_quarter
    and target.item = source.item
-   and target.currency = source.currency
    and target.filing_date = source.filing_date
 
 -- Only insert if a given combination of cik, fiscal_year, fiscal_quarter, item, value, currency and filing date does not already exist
 when not matched then
 insert (
     cik,
-    currency,
     filing_date,
     financial_statement,
     fiscal_year,
     fiscal_quarter,
     item,
-    value
+    usd_value
 )
 values (
     source.cik,
-    source.currency,
     source.filing_date,
     source.financial_statement,
     source.fiscal_year,
     source.fiscal_quarter,
     source.item,
-    source.value
+    source.usd_value
 );
