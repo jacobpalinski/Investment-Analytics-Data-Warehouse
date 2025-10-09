@@ -160,11 +160,9 @@ with DAG(dag_id='financials_fact_dag',
     )
 
     # Define task dependencies
-    extraction >> insert_staging_financials \
-    >> keep_most_recent_record >> delete_records >> derive_ratios >> delete_null_ratios \
-    >> populate_quarter >> data_quality_tests_staging \
-    >> data_quality_tests_staging_fail >> insert_dim_period >> insert_fact_financials >> data_quality_tests_dimension >> data_quality_tests_dimension_fail >> data_quality_tests_fact \
-    >> data_quality_tests_fact_fail
+    extraction >> insert_staging_financials >> keep_most_recent_record >> delete_records >> derive_ratios >> delete_null_ratios \
+    >> populate_quarter >> data_quality_tests_staging >> data_quality_tests_staging_fail >> insert_dim_period >> insert_fact_financials \
+    >> data_quality_tests_dimension >> data_quality_tests_dimension_fail >> data_quality_tests_fact >> data_quality_tests_fact_fail
 
     
 

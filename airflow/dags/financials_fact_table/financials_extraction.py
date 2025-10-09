@@ -9,7 +9,8 @@ from snowflake.connector.pandas_tools import write_pandas
 from polygon import RESTClient
 from dotenv import load_dotenv
 from utils.utils import create_snowflake_connection, s3_get_object, s3_put_object
-from financials_fact_table.financials_functions import polygon_parse_response, parse_response_sec_api
+#from financials_fact_table.financials_functions import polygon_parse_response, parse_response_sec_api
+from financials_fact_table.financials_functions import parse_response_sec_api
 
 def extract_financials():
     '''Extracts company financials data from Polygon API and loads it into Snowflake. '''

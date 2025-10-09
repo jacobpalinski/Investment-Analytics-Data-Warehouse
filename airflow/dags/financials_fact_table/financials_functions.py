@@ -277,7 +277,7 @@ def parse_response_sec_api(response: dict, cik: str, financials_data: list) -> N
         currency = first_currency
         value = last_record.get('val')
         
-        financials_data.append({'cik': cik, 'fiscal_year': fiscal_year, 'fiscal_quarter': fiscal_quarter, 'filing_date': filing_date, 'financial_statement': financial_statement, 'item': key, 'currency': currency, 'value': value})
+        financials_data.append({'cik': cik, 'fiscal_year': fiscal_year, 'fiscal_quarter': fiscal_quarter, 'filing_date': filing_date, 'financial_statement': financial_statement, 'item': item, 'currency': currency, 'value': value})
 
     return financials_data
 

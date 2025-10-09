@@ -76,8 +76,8 @@ from
 (select
 *
 from investment_analytics.staging.staging_financials
-where fiscal_year > extract(year from current_date)
-or fiscal_quarter not in ('Q1', 'Q2', 'Q3', 'Annual'));
+where fiscal_year > extract(year from current_date) + 1
+or fiscal_quarter not in ('Q1', 'Q2', 'Q3', 'FY'));
 
 -- Check for invalid filing_date
 insert into investment_analytics.data_quality.data_quality_results

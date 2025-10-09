@@ -8,9 +8,9 @@ using (
     rf.financial_statement,
     rf.item,
     case when (rf.currency) = 'USD' or (rf.currency) = 'USD / shares' then rf.value
-    else rf.vlaue / ucr.local_conversion_rate end as usd_value
+    else rf.value / ucr.local_conversion_rate end as usd_value
     from investment_analytics.raw.raw_financials as rf
-    inner join investment_analytics.financials.usd_currency_conversion_rates as ucr
+    left join investment_analytics.financials.usd_currency_conversion_rates as ucr
     on rf.currency = ucr.abbreviation
 ) as source
 on target.cik = source.cik
