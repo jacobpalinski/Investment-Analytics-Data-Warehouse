@@ -2,6 +2,7 @@
 import base64
 import pytest
 from dags.utils.utils import create_snowflake_connection, s3_get_object, s3_put_object
+from dags.utils.s3_utils import S3
 
 class TestSnowflakeConnection:
     def test_create_snowflake_connection(self, mocker):
@@ -79,8 +80,11 @@ class TestS3Utils:
         # Patch boto3.client to return mock s3_client
         mocker.patch("boto3.client", return_value=mock_s3_client)
 
+        # Instantiate the S3 class
+        s3_instance = S3("aws_access_key_id", "aws_secret_access_key")
+
         # Execute function
-        result = s3_get_object(bucket, key)
+        result = s3_instance.get_object(bucket, key)
 
         # Assert
         assert result == expected_object
