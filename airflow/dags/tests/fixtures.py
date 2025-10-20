@@ -17,9 +17,26 @@ def mock_finnhub_client(monkeypatch):
             self.initialized = True
         
         def company_profile2(self, ticker):
-            # Default behavior (can be overridden in tests)
             return {"name": "Apple", "finnhubIndustry": "Technology"}
 
     # Replace Client in your module with the mock
     monkeypatch.setattr("dags.api_extraction.finnhub_api.Client", MockClient)
     return MockClient
+
+@pytest.fixture
+def mock_fred_client(monkeypatch):
+    """ Fixture to mock the Fred API Client for initialization. """
+    class MockClient:
+        def __init__(self, api_key):
+            self.api_key = api_key
+            self.initialized = True
+        
+        def get_series(self, series_id, sort_order, limit):
+            self.called_with = (series_id, sort_order, limit)
+            return {"2025-10-19": 3.5}
+
+    # Replace Client in your module with the mock
+    monkeypatch.setattr("dags.api_extraction.fred_api.Fred", MockClient)
+    return MockClient
+
+
