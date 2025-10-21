@@ -1,5 +1,6 @@
 # Import modules
 import pytest
+import concurrent.futures
 from dags.utils.snowflake_utils import Snowflake
 from dags.api_extraction.finnhub_api import FinnhubApi
 
@@ -38,5 +39,31 @@ def mock_fred_client(monkeypatch):
     # Replace Client in your module with the mock
     monkeypatch.setattr("dags.api_extraction.fred_api.Fred", MockClient)
     return MockClient
+
+@pytest.fixture
+def mock_news_api_client():
+    class MockClient:
+        def __init__(self):
+            self.response = {"results": [{"headline": "mock headline"}]}
+            self.raise_timeout = False
+            self.raise_empty = False
+            self.call_count = 0
+        
+        def configure(self, raise_timeout=False, raise_empty=False):
+            self.raise_timeout = raise_timeout
+            self.raise_empty = raise_empty
+        
+        def news_api(self, **kwargs):
+            self.call_count += 1
+            if self.raise_timeout:
+                raise concurrent.futures.TimeoutError("Simulated timeout")
+            if self.raise_empty:
+                return {"results": []}
+            return self.response
+    
+    return MockClient()
+            
+
+
 
 
