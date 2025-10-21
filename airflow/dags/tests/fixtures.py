@@ -62,6 +62,29 @@ def mock_news_api_client():
             return self.response
     
     return MockClient()
+
+@pytest.fixture
+def mock_polygon_client(monkeypatch):
+    """ Fixture to mock the Polygon Client for PolygonApi initialization. """
+    class MockResponse:
+        def __init__(self, cik):
+            self.cik = cik
+
+    class MockClient:
+        def __init__(self, api_key):
+            self.api_key = api_key
+            self.initialized = True
+        
+        def get_ticker_details(self, ticker):
+            return MockResponse("0000320193")
+        
+        def list_ticker_news(self, ticker, published_utc_gte, order, limit, sort):
+            self.called_with = (ticker, published_utc_gte, order, limit, sort)
+            return {"date": "mock date", "ticker_symbol": "mock ticker symbol", "title": "mock title", "description": "mock description", "source": "mock source"}
+
+    # Replace Polygon Client with mock
+    monkeypatch.setattr("dags.api_extraction.polygon_api.RESTClient", MockClient)
+    return MockClient
             
 
 
