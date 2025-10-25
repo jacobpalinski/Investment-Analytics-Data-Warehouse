@@ -4,6 +4,7 @@ import time
 import concurrent.futures
 from dags.utils.snowflake_utils import Snowflake
 from dags.api_extraction.finnhub_api import FinnhubApi
+from dags.api_extraction.sec_api import SecApi
 
 @pytest.fixture
 def mock_snowflake_client():
@@ -127,6 +128,36 @@ def mock_reddit_env(monkeypatch):
         "old_post": old_post,
         "DummyRedditClient": DummyRedditClient
     }
+
+@pytest.fixture
+def mock_sec_api():
+    " Fixture that mocks SecApi class for testing"
+    class MockResponse:
+        status_code = 200
+
+    sec_api = SecApi(user_agent="test_agent")
+
+    mock_success_response = MockResponse()
+
+    mock_response_data = {
+        "Revenues": {
+            "units": {
+                "USD": [
+                    {
+                        "fy": 2024,
+                        "fp": "Q4",
+                        "filed": "2025-01-10",
+                        "val": 500000,
+                    }
+                ]
+            }
+        }
+    }
+
+    return sec_api, mock_success_response, mock_response_data
+
+
+
             
 
 
