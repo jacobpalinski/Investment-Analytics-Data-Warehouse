@@ -1,5 +1,6 @@
 # Import modules
 import pytest
+import time
 import concurrent.futures
 from dags.utils.snowflake_utils import Snowflake
 from dags.api_extraction.finnhub_api import FinnhubApi
@@ -85,6 +86,47 @@ def mock_polygon_client(monkeypatch):
     # Replace Polygon Client with mock
     monkeypatch.setattr("dags.api_extraction.polygon_api.RESTClient", MockClient)
     return MockClient
+
+@pytest.fixture
+def mock_reddit_env(monkeypatch):
+    """
+    Fixture that mocks Reddit API environment for testing RedditApi class.
+    """
+    current_time = 10000000
+    monkeypatch.setattr(time, "time", lambda: current_time)
+
+    # Define dummy submission class inline
+    class DummySubmission:
+        def __init__(self, created_utc):
+            self.created_utc = created_utc
+
+    # Create submissions — one recent, one old
+    new_post = DummySubmission(created_utc=current_time - 100)      # within 1 day
+    old_post = DummySubmission(created_utc=current_time - 1000000)  # older than 1 day
+
+    # Mock subreddit and Reddit client
+    class DummySubreddit:
+        def new(self, limit):
+            assert limit == 5
+            return [new_post, old_post]
+
+    class DummyRedditClient:
+        def __init__(self, raise_error=False):
+            self.raise_error = raise_error
+
+        def subreddit(self, name):
+            if self.raise_error:
+                raise Exception("API failure")
+            assert name == "investing"
+            return DummySubreddit()
+
+    # Return everything needed for the test
+    return {
+        "current_time": current_time,
+        "new_post": new_post,
+        "old_post": old_post,
+        "DummyRedditClient": DummyRedditClient
+    }
             
 
 
