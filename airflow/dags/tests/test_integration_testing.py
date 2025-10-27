@@ -11,6 +11,7 @@ from utils.snowflake_utils import Snowflake
 from dags.api_extraction.finnhub_api import FinnhubApi
 from dags.api_extraction.polygon_api import PolygonApi
 from dags.api_extraction.news_api import NewsApi
+from dags.api_extraction.reddit_api import RedditApi
 from utils.s3_utils import S3
 
 # Create setup for logging
@@ -118,7 +119,7 @@ class IntegrationTests:
         formatted_date = yesterday.strftime('%Y-%m-%d')
 
         # Create company news data list
-        company_news_data = []
+        company_news = []
 
         # Fetch news for each ticker
         for ticker in filtered_tickers:
@@ -128,7 +129,7 @@ class IntegrationTests:
 
                 # Append news items to the list            
                 for item in news:
-                    company_news_data.append({
+                    company_news.append({
                         "date": formatted_date,
                         "ticker_symbol": ticker,
                         "title": item.title,
@@ -139,7 +140,7 @@ class IntegrationTests:
                 logger.error(f"Error fetching news for {ticker}: {e}", exc_info=True)
         
         # Load data into Snowflake test table
-        snowflake_client.load_to_snowflake(connection=snowflake_conn, data=company_news_data, table_name='COMPANY_NEWS_TST')
+        snowflake_client.load_to_snowflake(connection=snowflake_conn, data=company_news, table_name='COMPANY_NEWS_TST')
     
     def test_extract_non_company_news(self):
         """
@@ -187,14 +188,14 @@ class IntegrationTests:
         ]
 
         # Create non-company news data list
-        non_company_news_data = []
+        non_company_news = []
 
         # Execute API call for parameters
         for param in parameters:
             news_response = news_api_client.fetch_with_retry(params=parameters, timeout=10)
             # Append news items to the list
             for item in news_response["results"]:
-                non_company_news_data.append({
+                non_company_news.append({
                     "date": item.get("pubDate"),
                     "title": item.get("title"),
                     "description": item.get("description"),
@@ -202,7 +203,60 @@ class IntegrationTests:
                 })
         
         # Load data into Snowflake test table
-        snowflake_client.load_to_snowflake(connection=snowflake_conn, data=non_company_news_data, table_name='NON_COMPANY_NEWS_TST')
+        snowflake_client.load_to_snowflake(connection=snowflake_conn, data=non_company_news, table_name='NON_COMPANY_NEWS_TST')
+    
+    def test_extract_reddit_submissions(self):
+        """
+        Tests extract_reddit_submissions from Reddit API and loads it into Snowflake (test table)
+        """
+        # Load environment variables
+        load_dotenv()
+
+        # Instantiate Snowflake Client
+        snowflake_client = Snowflake(
+            user=os.getenv("SNOWFLAKE_USER"),
+            account=os.getenv("SNOWFLAKE_ACCOUNT"),
+            private_key_encoded=os.getenv("SNOWFLAKE_PRIVATE_KEY_B64")
+        )
+
+        # Create snowflake connection
+        snowflake_conn = snowflake_client.create_connection(
+        warehouse='INVESTMENT_ANALYTICS_DWH',
+        database='INVESTMENT_ANALYTICS',
+        schema='TST')
+
+        # Instantiate Reddit API client
+        reddit_api_client = RedditApi(
+            client_id=os.getenv("REDDIT_CLIENT_ID"),
+            client_secret=os.getenv("REDDIT_CLIENT_SECRET"),
+            user_agent=os.getenv("REDDIT_USER_AGENT"),
+            username=os.getenv("REDDIT_USERNAME"),
+            password=os.getenv("REDDIT_PASSWORD")
+        )
+
+        # Define subreddits to fetch submissions from
+        subreddit_name = "investing"
+
+        # Create reddit submissions data list
+        submissions_data = []
+
+        # Fetch submisions from subreddit
+        reddit_submissions = reddit_api_client.extract_reddit_submissions(subreddit_name=subreddit_name, submissions_limit=5)
+
+        for submission in reddit_submissions:
+            submission_title = submission.title
+            submission_utc = submission.created_utc
+            submission_body = submission.selftext
+            
+            submissions_data.append({
+                "date": submission_utc,
+                "title": submission_title,
+                "description": submission_body,
+                "source": 'Reddit'
+            })
+        
+        # Load data into Snowflake test table
+        snowflake_client.load_to_snowflake(connection=snowflake_conn, data=submissions_data, table_name='REDDIT_SUBMISSIONS_TST')
 
 
     
