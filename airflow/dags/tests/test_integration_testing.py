@@ -1,5 +1,6 @@
 # Import modules
 import os
+import json
 from datetime import datetime, timedelta
 import time
 import logging
@@ -48,11 +49,14 @@ class IntegrationTests:
         # Instantiate S3 class
         s3_client = S3(aws_access_key_id=os.getenv("AWS_ACCESS"), aws_secret_access_key=os.getenv("AWS_SECRET"))
 
-        # Retrieve current date
-        today = datetime.now().strftime('%Y%m%d')
+        # Retrieve latest date of Nasdaq listed tickers extraction
+        metadata = s3_client.get_object(bucket=os.getenv('AWS_S3_BUCKET'), key='metadata.json')
+        metadata = json.loads(metadata['Body'].read().decode('utf-8'))
+        latest_run_date = metadata.get('financials_dimension')
+        latest_run_date_no_hyphen = datetime.strptime(latest_run_date, "%Y-%m-%d").strftime("%Y%m%d")
 
         # Retrieve Nasdaq listed tickers csv file from S3
-        s3_object = s3_client.get_object(bucket=os.getenv('AWS_S3_BUCKET'), key=f'nasdaq_listed_symbols_{today}.csv') # Adjust bucket and key later
+        s3_object = s3_client.get_object(bucket=os.getenv('AWS_S3_BUCKET'), key=f'nasdaq_listed_symbols_{latest_run_date_no_hyphen}.csv') # Adjust bucket and key later
         nasdaq_listed_tickers_df = pd.read_csv(s3_object['Body'])
         tickers = [f"{ticker}" for ticker in nasdaq_listed_tickers_df['Symbol'].dropna().tolist()]
 
@@ -335,10 +339,10 @@ class IntegrationTests:
         snowflake_client.load_to_snowflake(connection=snowflake_conn, data=financials_data, table_name='COMPANY_FINANCIALS_TST')
 
         with snowflake_conn.cursor() as cursor:
-            cursor.execute("SELECT COUNT(*) FROM INVESTMENT_ANALYTICS.TST.COMPANY_FINANCIALS_TST")
+            cursor.execute("SELECT COUNT(*) FROM INVESTMENT_ANALYTICS.TST.FINANCIALS_TST")
             result = cursor.fetchone()
             assert result[0] == len(financials_data)
-            cursor.execute("TRUNCATE TABLE INVESTMENT_ANALYTICS.TST.COMPANY_FINANCIALS_TST")
+            cursor.execute("TRUNCATE TABLE INVESTMENT_ANALYTICS.TST.FINANCIALS_TST")
     
     def test_extract_economic_indicators(self):
         """
@@ -406,7 +410,48 @@ class IntegrationTests:
             assert result[0] == len(economic_indicators)
             cursor.execute("TRUNCATE TABLE INVESTMENT_ANALYTICS.TST.ECONOMIC_INDICATORS_TST")
     
-    def test_extract_nasdaq_listed_tickers(self)
+    def test_extract_nasdaq_listed_tickers(self):
+        """
+        Tests extract_nasdaq_listed_tickers from GitHub URL and create csv with tickers in S3
+        """
+        # Initantiates S3 class
+        s3_client = S3(aws_access_key_id=os.getenv("AWS_ACCESS"), aws_secret_access_key=os.getenv("AWS_SECRET"))
+
+        # Github CSV file URL
+        csv_url = 'https://raw.githubusercontent.com/datasets/nasdaq-listings/refs/heads/main/data/nasdaq-listed.csv'
+
+        # Download raw data from GitHub URL
+        response = requests.get(csv_url)
+        if response.status_code == 200:
+            nasdaq_listings_csv_data = response.content  # raw bytes
+        else:
+            raise Exception(f"Failed to download CSV. Status code: {response.status_code}")
+        
+        # Retrieve current data
+        today = datetime.now().strftime('%Y%m%d')
+
+        # Create file with todays date
+        filename = f'nasdaq_listed_symbols_{today}.csv'
+
+        # Upload csv file to S3
+        s3_client.put_object(bucket=os.getenv('AWS_S3_TST_BUCKET'), key=filename, data=nasdaq_listings_csv_data)
+
+        # Update metadata file in S3 with date of latest nasdaq listings extraction
+        s3_client.update_metadata(bucket=os.getenv('AWS_S3_TST_BUCKET'), metadata_object='metadata.json', metadata_key='nasdaq_listed_tickers')
+
+        # Assert object exists in S3
+        response = s3_client.head_object(Bucket=os.getenv('AWS_S3_TST_BUCKET'), Key=filename)
+        assert response["ResponseMetadata"]["HTTPStatusCode"] == 200
+
+        # Assert content matches original CSV content
+        s3_object = s3_client.get_object(bucket=os.getenv('AWS_S3_TST_BUCKET'), key=filename)
+        s3_csv_data = s3_object['Body'].read()
+        assert nasdaq_listings_csv_data == s3_csv_data
+
+
+
+
+
     
 
     
