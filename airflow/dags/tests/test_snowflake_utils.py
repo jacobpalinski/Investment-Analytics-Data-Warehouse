@@ -80,8 +80,12 @@ class TestSnowflake:
         mock_connection = mocker.MagicMock()
         mock_connection.cursor.return_value.__enter__.return_value = mock_cursor
 
+        # Create test schema and table_name values
+        schema = "tst"
+        table_name = "dim_company"
+
         # Run test
-        result = mock_snowflake_client.query_current_ciks(mock_connection)
+        result = mock_snowflake_client.query_current_ciks(connection=mock_connection, schema=schema, table_name=table_name)
 
         # Assertions
         mock_cursor.execute.assert_called_once()

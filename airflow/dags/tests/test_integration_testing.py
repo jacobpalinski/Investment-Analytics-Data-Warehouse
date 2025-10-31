@@ -50,13 +50,13 @@ class IntegrationTests:
         s3_client = S3(aws_access_key_id=os.getenv("AWS_ACCESS"), aws_secret_access_key=os.getenv("AWS_SECRET"))
 
         # Retrieve latest date of Nasdaq listed tickers extraction
-        metadata = s3_client.get_object(bucket=os.getenv('AWS_S3_BUCKET'), key='metadata.json')
+        metadata = s3_client.get_object(bucket=os.getenv('AWS_S3_TST_BUCKET'), key='metadata.json')
         metadata = json.loads(metadata['Body'].read().decode('utf-8'))
         latest_run_date = metadata.get('financials_dimension')
         latest_run_date_no_hyphen = datetime.strptime(latest_run_date, "%Y-%m-%d").strftime("%Y%m%d")
 
         # Retrieve Nasdaq listed tickers csv file from S3
-        s3_object = s3_client.get_object(bucket=os.getenv('AWS_S3_BUCKET'), key=f'nasdaq_listed_symbols_{latest_run_date_no_hyphen}.csv') # Adjust bucket and key later
+        s3_object = s3_client.get_object(bucket=os.getenv('AWS_S3_TST_BUCKET'), key=f'nasdaq_listed_symbols_{latest_run_date_no_hyphen}.csv') # Adjust bucket and key later
         nasdaq_listed_tickers_df = pd.read_csv(s3_object['Body'])
         tickers = [f"{ticker}" for ticker in nasdaq_listed_tickers_df['Symbol'].dropna().tolist()]
 
@@ -125,7 +125,7 @@ class IntegrationTests:
                         select 
                         distinct 
                         ticker_symbol
-                        from investment_analytics.core.dim_company
+                        from investment_analytics.tst.dim_company
                         where is_current = TRUE """)
             tickers = [row[0] for row in cursor.fetchall()]
 

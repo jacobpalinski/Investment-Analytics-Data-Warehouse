@@ -54,7 +54,7 @@ class Snowflake:
             schema=schema
         )
     
-    def query_current_ciks(self, connection: snowflake.connector.SnowflakeConnection) -> list:
+    def query_current_ciks(self, connection: snowflake.connector.SnowflakeConnection, schema: str, table_name: str) -> list:
         """
         Retrieves current CIKs from the dim_company dimension table in Snowflake
 
@@ -65,11 +65,11 @@ class Snowflake:
             list: List of current CIKs
         """
         with connection.cursor() as cursor:
-            cursor.execute("""
+            cursor.execute(f"""
                         select 
                         distinct 
                         cik 
-                        from investment_analytics.core.dim_company
+                        from investment_analytics.{schema}.{table_name}
                         where is_current = TRUE """)
             ciks = [row[0] for row in cursor.fetchall()]
         
@@ -90,5 +90,10 @@ class Snowflake:
         
         if not success:
             raise Exception(f"Failed to load data into {target_table}.")
-        
-        logger.info(f"Loaded {nrows} rows into {target_table} in {nchunks} chunks.")
+    
+    def read_sql_file(self, file_path: str) -> str:
+        """
+        Reads a SQL file and returns its content
+        """
+        with open(file_path, 'r') as file:
+            return file.read()
