@@ -14,7 +14,7 @@ class TestFinnhubApi:
     def test_extract_company_profile_missing_fields(self, monkeypatch, mock_finnhub_client):
         """ Test when API response is missing expected fields. """
         class MockClient(mock_finnhub_client):
-            def company_profile2(self, ticker):
+            def company_profile2(self, symbol):
                 return {}  # simulate missing fields
 
         monkeypatch.setattr("dags.api_extraction.finnhub_api.Client", MockClient)
@@ -26,7 +26,7 @@ class TestFinnhubApi:
     def test_extract_company_profile_exception(self, monkeypatch, mock_finnhub_client, caplog):
         """Test when the client raises an exception."""
         class MockClient(mock_finnhub_client):
-            def company_profile2(self, ticker):
+            def company_profile2(self, symbol):
                 raise RuntimeError("API failure")
 
         monkeypatch.setattr("dags.api_extraction.finnhub_api.Client", MockClient)

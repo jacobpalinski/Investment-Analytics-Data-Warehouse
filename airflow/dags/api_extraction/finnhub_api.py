@@ -31,7 +31,7 @@ class FinnhubApi:
             dict: Dictionary with company name and industry
         """
         try:
-            response = self.finnhub_client.company_profile2(ticker)
+            response = self.finnhub_client.company_profile2(symbol=ticker)
             return {
                 "company_name": response.get("name", ""),
                 "industry": response.get("finnhubIndustry", "")

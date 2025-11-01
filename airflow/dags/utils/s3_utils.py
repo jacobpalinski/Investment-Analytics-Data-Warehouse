@@ -48,20 +48,21 @@ class S3:
         """
         self.s3.put_object(Bucket=bucket, Key=key, Body=data)
     
-    def update_metadata(self, bucket: str, metadata_key: str) -> None:
+    def update_metadata(self, bucket: str, metadata_object: str, metadata_key: str) -> None:
         """
         Updates the metadata of an S3 bucket by adding or updating a specific key with the current timestamp
 
         Args:
             bucket (str): The name of the S3 bucket.
+            metadata_object (str): The metadata object key in the S3 bucket.
             metadata_key (str): The metadata key to update with the current timestamp.
         """
         # Retrieve todays date and convert to string format
         today = datetime.now().strftime('%Y-%m-%d')
 
         # Update metadata with current run date
-        metadata = self.s3.get_object(bucket=bucket, key=metadata_key)
+        metadata = self.get_object(bucket=bucket, key=metadata_object)
         metadata = json.loads(metadata['Body'].read().decode('utf-8'))
-        metadata['company_dimension'] = today
-        self.s3.put_object(bucket=bucket, key=metadata_key, data=json.dumps(metadata).encode('utf-8'))
+        metadata[f'{metadata_key}'] = today
+        self.put_object(bucket=bucket, key=metadata_object, data=json.dumps(metadata).encode('utf-8'))
 
