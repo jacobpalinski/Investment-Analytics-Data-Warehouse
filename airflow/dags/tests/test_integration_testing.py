@@ -8,19 +8,19 @@ import pytest
 import requests
 import pandas as pd
 from dotenv import load_dotenv
-from utils.snowflake_utils import Snowflake
+from dags.utils.snowflake_utils import Snowflake
 from dags.api_extraction.finnhub_api import FinnhubApi
 from dags.api_extraction.polygon_api import PolygonApi
 from dags.api_extraction.news_api import NewsApi
 from dags.api_extraction.reddit_api import RedditApi
 from dags.api_extraction.sec_api import SecApi
 from dags.api_extraction.fred_api import FredApi
-from utils.s3_utils import S3
+from dags.utils.s3_utils import S3
 
 # Create setup for logging
 logger = logging.getLogger(__name__)
 
-class IntegrationTests:
+class TestIntegrationTesting:
     """ Class for integration tests """
     def test_extract_company_info(self):
         """
@@ -47,12 +47,12 @@ class IntegrationTests:
         polygon_api_client = PolygonApi(polygon_api_key=os.getenv("POLYGON_API_KEY"))
 
         # Instantiate S3 class
-        s3_client = S3(aws_access_key_id=os.getenv("AWS_ACCESS"), aws_secret_access_key=os.getenv("AWS_SECRET"))
+        s3_client = S3(aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"), aws_secret_access_key=os.getenv("AWS_SECRET"))
 
         # Retrieve latest date of Nasdaq listed tickers extraction
         metadata = s3_client.get_object(bucket=os.getenv('AWS_S3_TST_BUCKET'), key='metadata.json')
         metadata = json.loads(metadata['Body'].read().decode('utf-8'))
-        latest_run_date = metadata.get('financials_dimension')
+        latest_run_date = metadata.get('nasdaq_listed_tickers')[0]
         latest_run_date_no_hyphen = datetime.strptime(latest_run_date, "%Y-%m-%d").strftime("%Y%m%d")
 
         # Retrieve Nasdaq listed tickers csv file from S3
@@ -88,7 +88,7 @@ class IntegrationTests:
             time.sleep(1.25)
         
         # Load data into Snowflake test table
-        snowflake_client.load_to_snowflake(connection=snowflake_conn, data=company_info, table_name='COMPANY_INFORMATION_TST')
+        snowflake_client.load_to_snowflake(connection=snowflake_conn, data=company_info, target_table='COMPANY_INFORMATION_TST')
 
         with snowflake_conn.cursor() as cursor:
             cursor.execute("SELECT COUNT(*) FROM INVESTMENT_ANALYTICS.TST.COMPANY_INFORMATION_TST")
@@ -159,7 +159,7 @@ class IntegrationTests:
                 logger.error(f"Error fetching news for {ticker}: {e}", exc_info=True)
         
         # Load data into Snowflake test table
-        snowflake_client.load_to_snowflake(connection=snowflake_conn, data=company_news, table_name='COMPANY_NEWS_TST')
+        snowflake_client.load_to_snowflake(connection=snowflake_conn, data=company_news, target_table='COMPANY_NEWS_TST')
 
         with snowflake_conn.cursor() as cursor:
             cursor.execute("SELECT COUNT(*) FROM INVESTMENT_ANALYTICS.TST.COMPANY_NEWS_TST")
@@ -217,7 +217,7 @@ class IntegrationTests:
 
         # Execute API call for parameters
         for param in parameters:
-            news_response = news_api_client.fetch_with_retry(params=parameters, timeout=10)
+            news_response = news_api_client.fetch_with_retry(params=param, timeout=10)
             # Append news items to the list
             for item in news_response["results"]:
                 non_company_news.append({
@@ -228,7 +228,7 @@ class IntegrationTests:
                 })
         
         # Load data into Snowflake test table
-        snowflake_client.load_to_snowflake(connection=snowflake_conn, data=non_company_news, table_name='NON_COMPANY_NEWS_TST')
+        snowflake_client.load_to_snowflake(connection=snowflake_conn, data=non_company_news, target_table='NON_COMPANY_NEWS_TST')
 
         with snowflake_conn.cursor() as cursor:
             cursor.execute("SELECT COUNT(*) FROM INVESTMENT_ANALYTICS.TST.NON_COMPANY_NEWS_TST")
@@ -287,7 +287,7 @@ class IntegrationTests:
             })
         
         # Load data into Snowflake test table
-        snowflake_client.load_to_snowflake(connection=snowflake_conn, data=submissions_data, table_name='REDDIT_SUBMISSIONS_TST')
+        snowflake_client.load_to_snowflake(connection=snowflake_conn, data=submissions_data, target_table='REDDIT_SUBMISSIONS_TST')
 
         with snowflake_conn.cursor() as cursor:
             cursor.execute("SELECT COUNT(*) FROM INVESTMENT_ANALYTICS.TST.REDDIT_SUBMISSIONS_TST")
@@ -319,7 +319,7 @@ class IntegrationTests:
         sec_api_client = SecApi(user_agent=os.getenv("SEC_API_USER_AGENT"))
 
         # Retrieve current CIKs from dim_company dimension table in Snowflake
-        ciks = snowflake_client.query_current_ciks(snowflake_conn)
+        ciks = snowflake_client.query_current_ciks(connection=snowflake_conn, schema='TST', table_name='DIM_COMPANY')
 
         # Create financials data list
         financials_data = []
@@ -331,12 +331,13 @@ class IntegrationTests:
 
                 # Append financials items to the list            
                 parsed_financials = sec_api_client.extract_financial_data(cik=cik, response=financials)
-                financials_data.extend(parsed_financials)
+                print(parsed_financials)
+                financials_data.append(parsed_financials)
             except Exception as e:
                 logger.error(f"Error fetching financials for CIK {cik}: {e}", exc_info=True)
         
         # Load data into Snowflake test table
-        snowflake_client.load_to_snowflake(connection=snowflake_conn, data=financials_data, table_name='COMPANY_FINANCIALS_TST')
+        snowflake_client.load_to_snowflake(connection=snowflake_conn, data=financials_data, target_table='FINANCIALS_TST')
 
         with snowflake_conn.cursor() as cursor:
             cursor.execute("SELECT COUNT(*) FROM INVESTMENT_ANALYTICS.TST.FINANCIALS_TST")
@@ -402,7 +403,7 @@ class IntegrationTests:
             economic_indicators.append({'date': date, 'year': year, 'quarter': quarter, 'month': month_name, 'day': day, 'indicator': indicator, 'value': value})
         
         # Load data into Snowflake test table
-        snowflake_client.load_to_snowflake(connection=snowflake_conn, data=economic_indicators, table_name='ECONOMIC_INDICATORS_TST')
+        snowflake_client.load_to_snowflake(connection=snowflake_conn, data=economic_indicators, target_table='ECONOMIC_INDICATORS_TST')
 
         with snowflake_conn.cursor() as cursor:
             cursor.execute("SELECT COUNT(*) FROM INVESTMENT_ANALYTICS.TST.ECONOMIC_INDICATORS_TST")
@@ -414,8 +415,11 @@ class IntegrationTests:
         """
         Tests extract_nasdaq_listed_tickers from GitHub URL and create csv with tickers in S3
         """
+        # Load environment variables
+        load_dotenv()
+
         # Initantiates S3 class
-        s3_client = S3(aws_access_key_id=os.getenv("AWS_ACCESS"), aws_secret_access_key=os.getenv("AWS_SECRET"))
+        s3_client = S3(aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"), aws_secret_access_key=os.getenv("AWS_SECRET"))
 
         # Github CSV file URL
         csv_url = 'https://raw.githubusercontent.com/datasets/nasdaq-listings/refs/heads/main/data/nasdaq-listed.csv'
@@ -440,7 +444,7 @@ class IntegrationTests:
         s3_client.update_metadata(bucket=os.getenv('AWS_S3_TST_BUCKET'), metadata_object='metadata.json', metadata_key='nasdaq_listed_tickers')
 
         # Assert object exists in S3
-        response = s3_client.head_object(Bucket=os.getenv('AWS_S3_TST_BUCKET'), Key=filename)
+        response = s3_client.s3.head_object(Bucket=os.getenv('AWS_S3_TST_BUCKET'), Key=filename)
         assert response["ResponseMetadata"]["HTTPStatusCode"] == 200
 
         # Assert content matches original CSV content
