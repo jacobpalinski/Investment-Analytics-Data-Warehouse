@@ -1,13 +1,22 @@
 # Import modules
 import os
+import time
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import time
 import logging
 import pytest
 import requests
 import pandas as pd
 from dotenv import load_dotenv
+from typing import List
+from polygon import WebSocketClient
+from polygon.websocket.models import WebSocketMessage, Feed, Market
+from confluent_kafka import SerializingProducer
+from confluent_kafka.schema_registry import SchemaRegistryClient
+from confluent_kafka.schema_registry.avro import AvroSerializer
+from confluent_kafka.serialization import StringSerializer
+import snowflake.connector
 from dags.utils.snowflake_utils import Snowflake
 from dags.api_extraction.finnhub_api import FinnhubApi
 from dags.api_extraction.polygon_api import PolygonApi
@@ -331,7 +340,6 @@ class TestIntegrationTesting:
 
                 # Append financials items to the list            
                 parsed_financials = sec_api_client.extract_financial_data(cik=cik, response=financials)
-                print(parsed_financials)
                 financials_data.append(parsed_financials)
             except Exception as e:
                 logger.error(f"Error fetching financials for CIK {cik}: {e}", exc_info=True)
@@ -451,6 +459,98 @@ class TestIntegrationTesting:
         s3_object = s3_client.get_object(bucket=os.getenv('AWS_S3_TST_BUCKET'), key=filename)
         s3_csv_data = s3_object['Body'].read()
         assert nasdaq_listings_csv_data == s3_csv_data
+
+    def test_stock_aggregates_stream_producer(self):
+        """
+        Test stock stream producer loading data into Snowflake test table
+        """
+        # Load environment variables
+        load_dotenv()
+
+        # Avro schema definition
+        avro_schema_str = """
+        {
+        "type": "record",
+        "name": "StockAggregatesStream",
+        "namespace": "polygon",
+        "fields": [
+            {"name": "ticker_symbol", "type": "string"},
+            {"name": "event_timestamp", "type": "long"},
+            {"name": "volume", "type": "long"},
+            {"name": "accumulated_volume", "type": "long"},
+            {"name": "volume_weighted_average_price", "type": "double"},
+            {"name": "closing_price", "type": "double"},
+            {"name": "average_trade_size", "type": "double"}
+        ]
+        }
+        """
+        # Setup Schema Registry
+        schema_registry_url = {"url": os.getenv("SCHEMA_REGISTRY_URL")}
+        schema_registry_client = SchemaRegistryClient(schema_registry_url)
+
+        # Create avro serializer
+        avro_serializer = AvroSerializer(
+            schema_registry_client,
+            avro_schema_str
+        )
+
+        # Kafka producer setup
+        producer_config = {
+            'bootstrap.servers': os.getenv("KAFKA_BOOTSTRAP_SERVERS"),
+            'key.serializer': StringSerializer('utf_8'),
+            'value.serializer': avro_serializer
+        }
+
+        producer = SerializingProducer(producer_config)
+
+        # Create test message
+        msg = {
+        "ticker_symbol": "TEST",
+        "event_timestamp": int(datetime.now(tz=timezone.utc).timestamp() * 1000),
+        "volume": 123,
+        "accumulated_volume": 456,
+        "volume_weighted_average_price": 100.5,
+        "closing_price": 101.2,
+        "average_trade_size": 12.3
+        }
+
+        # Push messages to topic
+        producer.produce(topic=os.getenv("KAFKA_BOOTSTRAP_SERVERS"), key="TEST", value=msg)
+        producer.flush()
+
+        # Instantiate Snowflake Client
+        snowflake_client = Snowflake(
+            user=os.getenv("SNOWFLAKE_USER"),
+            account=os.getenv("SNOWFLAKE_ACCOUNT"),
+            private_key_encoded=os.getenv("SNOWFLAKE_PRIVATE_KEY_B64")
+        )
+
+        # Create snowflake connection
+        snowflake_conn = snowflake_client.create_connection(
+        warehouse='INVESTMENT_ANALYTICS_DWH',
+        database='INVESTMENT_ANALYTICS',
+        schema='TST')
+
+        with snowflake_conn.cursor() as cursor:
+            cursor.execute("SELECT COUNT(*) FROM INVESTMENT_ANALYTICS.TST.STOCK_AGGREGATES_TST")
+            result = cursor.fetchone()
+            assert result[0] == 1
+            cursor.execute("TRUNCATE TABLE INVESTMENT_ANALYTICS.TST.STOCK_AGGREGATES_TST")
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+
 
 
 

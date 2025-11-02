@@ -19,7 +19,7 @@ def mock_finnhub_client(monkeypatch):
             self.api_key = api_key
             self.initialized = True
         
-        def company_profile2(self, ticker):
+        def company_profile2(self, symbol):
             return {"name": "Apple", "finnhubIndustry": "Technology"}
 
     # Replace Client in your module with the mock

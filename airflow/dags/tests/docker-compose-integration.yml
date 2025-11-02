@@ -1,0 +1,64 @@
+services:
+  zookeeper-1:
+      image: confluentinc/cp-zookeeper:7.3.3
+      ports:
+        - "2181:2181"
+      environment:
+        ZOOKEEPER_SERVER_ID: 1
+        ZOOKEEPER_CLIENT_PORT: 2181
+        ZOOKEEPER_TICK_TIME: 2000
+        ZOOKER_INIT_LIMIT: 10
+        ZOOKEEPER_SYNC_LIMIT: 5
+
+  kafka-1:
+    image: confluentinc/cp-kafka:7.3.3
+    ports:
+      - "8097:8097"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181 #,zookeeper-2:2181,zookeeper-3:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: EXTERNAL:PLAINTEXT,INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: EXTERNAL://localhost:8097,INTERNAL://kafka-1:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_MIN_INSYNC_REPLICAS: 1
+      KAFKA_NUM_PARTITIONS: 1
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+    depends_on:
+      - zookeeper-1
+  
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.3.3
+    ports:
+      - "8081:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka-1:9092
+      SCHEMA_REGISTRY_LISTENERS: "http://0.0.0.0:8081"
+    depends_on:
+      - kafka-1
+  
+  kafka-connect:
+    image: confluentinc/cp-kafka-connect:7.3.3
+    ports:
+      - "8083:8083"
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: kafka-1:9092 #,kafka-2:9092, kafka-3:9092
+      CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect
+      CONNECT_GROUP_ID: compose-connect-group
+      CONNECT_CONFIG_STORAGE_TOPIC: docker-connect-configs
+      CONNECT_OFFSET_STORAGE_TOPIC: docker-connect-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: docker-connect-status
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
+      CONNECT_VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      CONNECT_PLUGIN_PATH: /usr/share/java, /usr/share/confluent-hub-components
+    command:
+      - bash
+      - -c
+      - "confluent-hub install --no-prompt snowflakeinc/snowflake-kafka-connector:1.9.4 && /etc/confluent/docker/run"
