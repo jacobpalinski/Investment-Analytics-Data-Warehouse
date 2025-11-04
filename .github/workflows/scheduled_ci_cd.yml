@@ -1,0 +1,53 @@
+name: Scheduled CI/CD
+
+on:
+  schedule:
+    - cron: "1 11 * * *"   # runs daily @ 02:00 UTC
+
+jobs:
+  check-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download push marker
+        uses: actions/download-artifact@v4
+        with:
+          name: main-updated-flag
+        continue-on-error: true
+
+      - name: Exit if no new push
+        run: |
+          if [ ! -f push_flag.txt ]; then
+            echo "No new code since last build. Exiting."
+            exit 0
+          fi
+
+      - name: Remove marker (reset for next cycle)
+        run: rm push_flag.txt
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        run: |
+          pytest airflow/dags/tests
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve tfplan
