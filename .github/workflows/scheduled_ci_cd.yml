@@ -2,7 +2,7 @@ name: Scheduled CI/CD
 
 on:
   schedule:
-    - cron: "1 11 * * *"   # runs daily @ 02:00 UTC
+    - cron: "0 11 * * *"   # runs daily @ 02:00 UTC
 
 jobs:
   check-and-deploy:
@@ -24,9 +24,25 @@ jobs:
 
       - name: Remove marker (reset for next cycle)
         run: rm push_flag.txt
-
-      - name: Checkout code
+      
+      - name: Checkout repository
         uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Set up Docker Compose
+        run: sudo apt-get update && sudo apt-get install -y docker-compose
+      
+      - name: Start services with docker-compose
+        working-directory: ./airflow/dags/tests
+        run: docker-compose -f docker-compose-integration.yml up -d
+      
+      - name: Wait for services
+        run: |
+          echo "Waiting for containers..."
+          sleep 90
+          docker ps
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -39,6 +55,11 @@ jobs:
       - name: Run tests
         run: |
           pytest airflow/dags/tests
+      
+      - name: Stop integration services
+        if: always()
+        working-directory: .airflow/dags/tests
+        run: docker-compose -f docker-compose-integration.yml down
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
