@@ -485,7 +485,7 @@ class TestIntegrationTesting:
         }
         """
         # Setup Schema Registry
-        schema_registry_url = {"url": os.getenv("SCHEMA_REGISTRY_URL")}
+        schema_registry_url = {"url": os.getenv("SCHEMA_REGISTRY_URL_TST")}
         schema_registry_client = SchemaRegistryClient(schema_registry_url)
 
         # Create avro serializer
@@ -496,7 +496,7 @@ class TestIntegrationTesting:
 
         # Kafka producer setup
         producer_config = {
-            'bootstrap.servers': os.getenv("KAFKA_BOOTSTRAP_SERVERS"),
+            'bootstrap.servers': os.getenv("KAFKA_BOOTSTRAP_SERVERS_TST"),
             'key.serializer': StringSerializer('utf_8'),
             'value.serializer': avro_serializer
         }
@@ -515,7 +515,7 @@ class TestIntegrationTesting:
         }
 
         # Push messages to topic
-        producer.produce(topic=os.getenv("KAFKA_BOOTSTRAP_SERVERS"), key="TEST", value=msg)
+        producer.produce(topic=os.getenv("KAFKA_TOPIC_TST"), key="TEST", value=msg)
         producer.flush()
 
         # Instantiate Snowflake Client

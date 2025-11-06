@@ -63,7 +63,7 @@ avro_schema_str = """
 """
 
 # Setup Schema Registry
-schema_registry_url = {"url": SCHEMA_REGISTRY_URL}
+schema_registry_url = {"url": os.getenv("SCHEMA_REGISTRY_URL")}
 schema_registry_client = SchemaRegistryClient(schema_registry_url)
 
 # Create avro serializer
@@ -74,7 +74,7 @@ avro_serializer = AvroSerializer(
 
 # Kafka producer setup
 producer_config = {
-    'bootstrap.servers': KAFKA_BOOTSTRAP_SERVERS,
+    'bootstrap.servers': os.getenv("KAFKA_BOOTSTRAP_SERVERS"),
     'key.serializer': StringSerializer('utf_8'),
     'value.serializer': avro_serializer
 }
@@ -98,7 +98,7 @@ ws_client = WebSocketClient(
 ws_client.subscribe(*tickers)
 '''
 
-dummy_tickers = ['ACTU', 'AKBA', 'ABAT', 'ADUS']
+dummy_tickers = ['AAPL', 'ABNB', 'AAL']
 
 def generate_dummy_message(ticker: str, accumulated_volume:int):
     """Generate a fake stock aggregate message."""
@@ -154,7 +154,7 @@ except KeyboardInterrupt:
         }
 
         try:
-            producer.produce(topic=KAFKA_TOPIC, key=m.symbol, value=message)
+            producer.produce(topic=os.getenv("KAFKA_TOPIC"), key=m.symbol, value=message)
             print(f"Produced: {m.symbol} @ {m.end_timestamp}")
         except Exception as e:
             print(f"Kafka produce error: {e}")
