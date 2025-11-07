@@ -35,9 +35,6 @@ class TestIntegrationTesting:
         """
         Tests extract_company_info from Finnhub and Polygon API and loads it into Snowflake (test table)
         """
-        # Load environment variables
-        load_dotenv()
-
         # Instantiate Snowflake Client
         snowflake_client = Snowflake(
             user=os.getenv("SNOWFLAKE_USER"),
@@ -109,9 +106,6 @@ class TestIntegrationTesting:
         """
         Tests extract_company_news from Polygon API and loads it into Snowflake (test table)
         """
-        # Load environment variables
-        load_dotenv()
-
         # Instantiate Snowflake Client
         snowflake_client = Snowflake(
             user=os.getenv("SNOWFLAKE_USER"),
@@ -180,9 +174,6 @@ class TestIntegrationTesting:
         """
         Tests extract_non_company_news from News API and loads it into Snowflake (test table)
         """
-        # Load environment variables
-        load_dotenv()
-
         # Instantiate Snowflake Client
         snowflake_client = Snowflake(
             user=os.getenv("SNOWFLAKE_USER"),
@@ -249,9 +240,6 @@ class TestIntegrationTesting:
         """
         Tests extract_reddit_submissions from Reddit API and loads it into Snowflake (test table)
         """
-        # Load environment variables
-        load_dotenv()
-
         # Instantiate Snowflake Client
         snowflake_client = Snowflake(
             user=os.getenv("SNOWFLAKE_USER"),
@@ -308,9 +296,6 @@ class TestIntegrationTesting:
         """
         Tests extract_financials from SEC API and loads it into Snowflake (test table)
         """
-        # Load environment variables
-        load_dotenv()
-
         # Instantiate Snowflake Client
         snowflake_client = Snowflake(
             user=os.getenv("SNOWFLAKE_USER"),
@@ -357,9 +342,6 @@ class TestIntegrationTesting:
         """
         Tests extract_economic_indicators from FRED API and loads it into Snowflake (test table)
         """
-        # Load environment variables
-        load_dotenv()
-
         # Instantiate Snowflake Client
         snowflake_client = Snowflake(
             user=os.getenv("SNOWFLAKE_USER"),
@@ -423,9 +405,6 @@ class TestIntegrationTesting:
         """
         Tests extract_nasdaq_listed_tickers from GitHub URL and create csv with tickers in S3
         """
-        # Load environment variables
-        load_dotenv()
-
         # Initantiates S3 class
         s3_client = S3(aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"), aws_secret_access_key=os.getenv("AWS_SECRET"))
 
@@ -464,9 +443,6 @@ class TestIntegrationTesting:
         """
         Test stock stream producer loading data into Snowflake test table
         """
-        # Load environment variables
-        load_dotenv()
-
         # Avro schema definition
         avro_schema_str = """
         {
