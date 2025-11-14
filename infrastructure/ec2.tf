@@ -132,7 +132,7 @@ iam_instance_profile        = aws_iam_instance_profile.ec2_profile.name
 associate_public_ip_address = true
 
 # Initial Setup Script
-user_data = file("./infrastructure/user_data.sh")
+user_data = file("./infrastructure/initial_script.sh")
 
 tags = {
   Name = "investment-analytics-data-warehouse-ec2-host"
