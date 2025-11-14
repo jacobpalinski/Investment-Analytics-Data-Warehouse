@@ -2,6 +2,7 @@ locals {
   buckets = {"investment-analytics-data-warehouse", "investment-analytics-data-warehouse-tst" }
 }
 
+# Not needed once created for the first time
 resource "aws_s3_bucket" "buckets" {
   for_each = local.buckets
   bucket = each.value

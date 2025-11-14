@@ -142,6 +142,14 @@ variable "metabase_private_key" {
   sensitive = true
 }
 
+# Declare instance_type variable
+variable "instance_type" {
+  description = "EC2 instance type"
+  type        = string
+  default     = "m7i.large"
+}
+
+
 
 
 
