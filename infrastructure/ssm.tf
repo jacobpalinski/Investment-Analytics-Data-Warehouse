@@ -5,30 +5,30 @@ locals {
 # A helper module-like pattern to avoid repetition
 resource "aws_ssm_parameter" "ssm_params" {
   for_each = {
-    access_key_id = var.aws_access_key_id
-    secret = var.aws_secret
-    s3_bucket = var.aws_s3_bucket
-    s3_tst_bucket = var.aws_s3_tst_bucket
-    airflow_uid = var.airflow_uid
-    polygon_api_key = var.polygon_api_key
-    finnhub_api_key = var.finnhub_api_key
-    news_api_key = var.news_api_key
-    reddit_client_id = var.reddit_client_id
-    reddit_client_secret = var.reddit_client_secret
-    reddit_user_agent = var.reddit_user_agent
-    reddit_username = var.reddit_username
-    reddit_password = var.reddit_password
-    snowflake_user = var.snowflake_user
-    snowflake_password = var.snowflake_password
-    snowflake_account = var.snowflake_account
-    snowflake_private_key_b64 = var.snowflake_private_key_b64
-    snowflake_private_key_passphrase = var.snowflake_private_key_passphrase
-    fred_api_key = var.fred_api_key
-    sec_api_user_agent = var.sec_api_user_agent
-    kafka_bootstrap_servers = var.kafka_bootstrap_servers
-    kafka_topic = var.kafka_topic
-    schema_registry_url = var.schema_registry_url
-    metabase_private_key = var.metabase_private_key
+    ACCESS_KEY_ID = var.aws_access_key_id
+    SECRET = var.aws_secret
+    S3_BUCKET = var.aws_s3_bucket
+    S3_TST_BUCKET = var.aws_s3_tst_bucket
+    AIRFLOW_UID = var.airflow_uid
+    POLYGON_API_KEY = var.polygon_api_key
+    FINNHUB_API_KEY = var.finnhub_api_key
+    NEWS_API_KEY = var.news_api_key
+    REDDIT_CLIENT_ID = var.reddit_client_id
+    REDDIT_CLIENT_SECRET = var.reddit_client_secret
+    REDDIT_USER_AGENT = var.reddit_user_agent
+    REDDIT_USERNAME = var.reddit_username
+    REDDIT_PASSWORD = var.reddit_password
+    SNOWFLAKE_USER = var.snowflake_user
+    SNOWFLAKE_PASSWORD = var.snowflake_password
+    SNOWFLAKE_ACCOUNT = var.snowflake_account
+    SNOWFLAKE_PRIVATE_KEY_B64 = var.snowflake_private_key_b64
+    SNOWFLAKE_PRIVATE_KEY_PASSPHRASE = var.snowflake_private_key_passphrase
+    FRED_API_KEY = var.fred_api_key
+    SEC_API_USER_AGENT = var.sec_api_user_agent
+    KAFKA_BOOTSTRAP_SERVERS = var.kafka_bootstrap_servers
+    KAFKA_TOPIC = var.kafka_topic
+    SCHEMA_REGISTRY_URL = var.schema_registry_url
+    METABASE_PRIVATE_KEY = var.metabase_private_key
   }
 
   name = local.ssm_prefix + each.key
