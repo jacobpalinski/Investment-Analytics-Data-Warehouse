@@ -28,6 +28,18 @@ variable "airflow_uid" {
   sensitive = true
 }
 
+# Declare airflow_username variable
+variable "airflow_username" {
+  type = string
+  sensitive = true
+}
+
+# Declare airflow_password variable
+variable "airflow_password" {
+  type = string
+  sensitive = true
+}
+
 # Declare polygon_api_key variable
 variable "polygon_api_key" {
   type = string
@@ -94,8 +106,20 @@ variable "snowflake_account" {
   sensitive = true
 }
 
+# Declare snowflake_role variable
+variable "snowflake_role" {
+  type = string
+  sensitive = true
+}
+
 # Declare snowflake_private_key_b64 variable
 variable "snowflake_private_key_b64" {
+  type = string
+  sensitive = true
+}
+
+# Declare snowflake_private_key_b64_full variable
+variable "snowflake_private_key_b64_full" {
   type = string
   sensitive = true
 }
@@ -141,6 +165,19 @@ variable "metabase_private_key" {
   type = string
   sensitive = true
 }
+
+# Declare metabase_username variable
+variable "metabase_username" {
+  type = string
+  sensitive = true
+}
+
+# Declare metabase_password variable
+variable "metabase_password" {
+  type = string
+  sensitive = true
+}
+
 
 # Declare instance_type variable
 variable "instance_type" {
