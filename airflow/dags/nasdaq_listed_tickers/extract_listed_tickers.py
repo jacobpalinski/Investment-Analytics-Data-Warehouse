@@ -1,0 +1,36 @@
+''' Import Modules '''
+import os
+import requests
+import logging
+from datetime import datetime
+from dotenv import load_dotenv
+from dags.utils.s3_utils import S3
+
+# Create setup for logging
+logger = logging.getLogger(__name__)
+
+# Load environment variables
+load_dotenv()
+
+# Initantiates S3 class
+s3_client = S3(aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"), aws_secret_access_key=os.getenv("AWS_SECRET"))
+
+# Nasdaq Listings Raw Github Url
+csv_url = 'https://raw.githubusercontent.com/datasets/nasdaq-listings/refs/heads/main/data/nasdaq-listed.csv'
+
+# Filename for listed symbols containing current date
+filename = f"nasdaq_listed_symbols_{datetime.now().strftime('%Y%m%d')}.csv"
+
+# Make Request
+response = requests.get(csv_url)
+
+# Create new file in S3 if request is successful and response is non empty
+if response.status_code == 200 and len(response.content) > 0:
+    try: 
+        s3_client.put_object(
+            bucket=os.getenv('AWS_S3_BUCKET'),
+            key=filename,
+            data=response.content
+        )
+    except Exception as e: 
+        logger.exception(f"Failed to extract nasdaq listed tickers: {e}")
