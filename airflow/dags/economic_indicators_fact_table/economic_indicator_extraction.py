@@ -3,32 +3,38 @@ import os
 import json
 import requests
 from datetime import datetime, date
-from dateutil.relativedelta import relativedelta
 import pandas as pd
-from fredapi import Fred
-from snowflake.connector.pandas_tools import write_pandas
+import logging
 from dotenv import load_dotenv
-from utils.utils import create_snowflake_connection, s3_get_object, s3_put_object
+from dags.utils.snowflake_utils import Snowflake
+from dags.utils.s3_utils import S3
+from dags.api_extraction.fred_api import FredApi
 
 def extract_economic_indicators():
     """
     Extracts economic indicators from FRED API and loads it into Snowflake.
     """
+    # Create setup for logging
+    logger = logging.getLogger(__name__)
 
-    # Load environment variables
-    load_dotenv()
-
-    # Create snowflake connection
-    snowflake_conn = create_snowflake_connection(
+    # Instantiate Snowflake Client
+    snowflake_client = Snowflake(
         user=os.getenv("SNOWFLAKE_USER"),
-        private_key_encoded=os.getenv("SNOWFLAKE_PRIVATE_KEY_B64"),
         account=os.getenv("SNOWFLAKE_ACCOUNT"),
-        warehouse='INVESTMENT_ANALYTICS_DWH',
-        database='INVESTMENT_ANALYTICS',
-        schema='RAW'
+        private_key_encoded=os.getenv("SNOWFLAKE_PRIVATE_KEY_B64")
     )
 
-    # Define the economic indicators and their corresponding series IDs and frequencies
+    # Create snowflake connection
+    snowflake_conn = snowflake_client.create_connection(
+    warehouse='INVESTMENT_ANALYTICS_DWH',
+    database='INVESTMENT_ANALYTICS',
+    schema='RAW')
+
+    # Instantiate FRED API client
+    fred_api_key = os.getenv("FRED_API_KEY")
+    fred_api_client = FredApi(fred_api_key=fred_api_key)
+
+    # Define the economic indicators and their corresponding series IDs
     series = {
         'interest_rate': 'DFF',
         'unemployment_rate': 'UNRATE',
@@ -36,10 +42,6 @@ def extract_economic_indicators():
         'consumer_confidence': 'UMCSENT',
         'consumer_price_index': 'CPIAUCSL',
     }
-
-    # Intiialise FRED API key and FRED API client
-    fred_api_key = os.getenv("FRED_API_KEY")
-    fred_client = Fred(api_key=fred_api_key)
 
     # Current date information
     today = datetime.now()
@@ -53,29 +55,19 @@ def extract_economic_indicators():
     # Economic indicator data storage
     economic_indicators = []
 
-    # Retrieve economic indicators from an external API (e.g., FRED)
+    # Retrieve economic indicators from FRED API
     for indicator, series_id in series.items():
-        indicator_series = fred_client.get_series(series_id, sort_order='desc', limit=1)
+        indicator_series = fred_api_client.extract_fred_data(series_id=series_id)
 
         if not indicator_series.empty:
             value = indicator_series.iloc[0]
         else:
-            print(f"No data found for {indicator}")
-            continue
+            logger.warning(f"No data found for {indicator}")
+            value = None
 
         economic_indicators.append({'date': date, 'year': year, 'quarter': quarter, 'month': month_name, 'day': day, 'indicator': indicator, 'value': value})
-        
-    # Process and prepare data for Snowflake
-    economic_indicators_df = pd.DataFrame(economic_indicators)
-    economic_indicators_df.columns = map(str.upper, economic_indicators_df.columns)  # Convert column names to uppercase
     
-    # Load data into Snowflake
-    success, nchunks, nrows, _ = write_pandas(snowflake_conn, economic_indicators_df, table_name="RAW_ECONOMIC_INDICATORS", database=os.getenv("SNOWFLAKE_DATABASE"), schema=os.getenv("SNOWFLAKE_RAW_SCHEMA"))
-    print(f"Loaded {nrows} rows. Success: {success}")
-
-    # Update metadata in S3
-    '''today_str = today.strftime('%Y-%m-%d')
-    metadata['economic_indicators_dimension'] = today
-    s3_put_object(bucket=os.getenv('AWS_S3_BUCKET'), key='metadata.json', data=json.dumps(metadata).encode('utf-8')) '''
+    # Load data into Snowflake test table
+    snowflake_client.load_to_snowflake(connection=snowflake_conn, data=economic_indicators, target_table='RAW_ECONOMIC_INDICATORS')
     
 
