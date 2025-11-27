@@ -11,6 +11,8 @@ from dags.fact_sentiments.sentiment_score_functions import (
 class TestSentimentScoreFunctions:
 
     def test_calculate_sentiment_scores(self):
+        """ Tests calculate_sentiment_scores function """
+        # Batch output mock
         batch_outputs = [
             [
                 {"label": "positive", "score": 0.7},
@@ -19,27 +21,36 @@ class TestSentimentScoreFunctions:
             ]
         ]
 
+        # Call calculate_sentiment_scores function
         result = calculate_sentiment_scores(batch_outputs)
+
+        # Assert expected result
         assert pytest.approx(result, 0.0001) == [0.8]
 
 
     def test_process_text_with_chunking_empty_text(self, mocker):
+        """ Tests process_text_with_chunking with empty or no text """
+        # Mock model and tokenizer
         model = mocker.Mock()
         tokenizer = mocker.Mock()
 
+        # Assert expected result
         assert process_text_with_chunking(model, tokenizer, "") == 0.5
         assert process_text_with_chunking(model, tokenizer, "   ") == 0.5
         assert process_text_with_chunking(model, tokenizer, None) == 0.5
 
 
     def test_process_text_with_chunking_short_text(self, mocker):
+        """ Tests process_text_with_chunking with short text """
+        # Mock model and tokenizer
         model = mocker.Mock()
         tokenizer = mocker.Mock()
 
+        # Create mock tokenization
         tokenizer.tokenize.return_value = ["hello", "world"]
         tokenizer.convert_tokens_to_string.side_effect = lambda x: " ".join(x)
 
-        # Pipeline output mock (must match pipeline call signature)
+        # Pipeline output mock
         model.side_effect = lambda texts, **kwargs: [
             [
                 {"label": "positive", "score": 0.7},
@@ -48,14 +59,20 @@ class TestSentimentScoreFunctions:
             ]
         ]
 
+        # Call process_text_with_chunking function
         result = process_text_with_chunking(model, tokenizer, "hello world")
+
+        # Assert expected result
         assert pytest.approx(result, 0.0001) == 0.8
 
 
     def test_process_text_with_chunking_long_text(self, mocker):
+        """ Tests process_text_with_chunking with long text """
+        # Mock model and tokenizer
         model = mocker.Mock()
         tokenizer = mocker.Mock()
 
+        # Create mock tokenization to simulate long text
         tokenizer.tokenize.return_value = ["text"] * 250
         tokenizer.convert_tokens_to_string.side_effect = lambda toks: " ".join(toks)
 
@@ -81,16 +98,22 @@ class TestSentimentScoreFunctions:
         # Pipeline returns a list of lists (one per chunk)
         model.side_effect = lambda texts, **kwargs: [mock_outputs[i] for i in range(len(texts))]
 
+        # Call process_text_with_chunking function
         result = process_text_with_chunking(model, tokenizer, "x" * 1000, max_tokens=50, chunk_size=100)
 
+        # Assert expected result
         expected = (0.7 + 0.75 + 0.85) / 3
         assert pytest.approx(expected, 0.0001) == result
 
     def test_process_in_batches_short_description(self, mocker):
+        """ Tests process_in_batches_short_description function"""
+        # Mock model
         model = mocker.Mock()
+
+        # Create sample dataframe
         df = pd.DataFrame({"text": ["text1", "text2", "text3"]})
 
-        # Pipeline returns output for ALL items in batch
+        # Pipeline returns output for all items in batch
         mock_outputs = [
             [
                 {"label": "positive", "score": 0.5},
@@ -112,22 +135,26 @@ class TestSentimentScoreFunctions:
         outputs_iter = iter(mock_outputs)
         model.side_effect = lambda texts, **kwargs: [next(outputs_iter) for _ in texts]
 
+        # Call process_in_batches_short_description function
         result = process_in_batches_short_description(model, df, "text", batch_size=2)
 
+        # Assert expected result
         assert result == pytest.approx([0.7, 0.75, 0.85])
 
 
     def test_process_in_batches_long_description(self, mocker):
+        """ Tests process_in_batches_long_description function"""
+        # Mock model and tokenizer
         model = mocker.Mock()
         tokenizer = mocker.Mock()
 
+        # Create sample dataframe
         df = pd.DataFrame({"text": ["text1", "text2", "text3"]})
 
-        # Tokenizer returns a short list → no chunking
+        # Tokenizer returns a short list with no chunking
         tokenizer.tokenize.return_value = ["text"]
 
-        # model should return LIST OF LISTS (batch → predictions)
-        # because calculate_sentiment_scores expects: [ [ {label, score}, ... ] ]
+        # Pipeline returns output for all items in batch
         model.side_effect = [
             [[{"label": "positive", "score": 0.5},
             {"label": "neutral", "score": 0.4},
@@ -142,9 +169,11 @@ class TestSentimentScoreFunctions:
             {"label": "negative", "score": 0.1}]]
         ]
 
+        # Call process_in_batches_long_description function
         result = process_in_batches_long_description(
             model, tokenizer, df, "text", batch_size=1
         )
 
+        # Assert expected result
         expected = [0.7, 0.75, 0.85]
         assert result == pytest.approx(expected)
