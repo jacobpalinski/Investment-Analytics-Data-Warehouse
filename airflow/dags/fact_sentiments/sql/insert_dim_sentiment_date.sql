@@ -1,3 +1,4 @@
+-- Insert new record in sentiment date dimension provided it doesn't already exist
 merge into investment_analytics.sentiment.dim_sentiment_date d
 using (
     select 

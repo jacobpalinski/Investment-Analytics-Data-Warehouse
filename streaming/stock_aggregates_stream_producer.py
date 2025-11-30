@@ -1,8 +1,6 @@
 # Import necessary libraries
 import os
-import time
-import json
-import pandas as pd
+import logging
 from typing import List
 from dotenv import load_dotenv
 from polygon import WebSocketClient
@@ -16,11 +14,16 @@ import random
 from datetime import datetime, timezone
 
 # Load environment variables
-'''load_dotenv()
-polygon_api_key = os.getenv("POLYGON_API_KEY") '''
+load_dotenv()
+
+# Get Polygon API key from environment variables
+polygon_api_key = os.getenv("POLYGON_API_KEY")
+
+# Create setup for logging
+logger = logging.getLogger(__name__)
 
 # Create snowflake connection
-''' snowflake_conn = snowflake.connector.connect(
+snowflake_conn = snowflake.connector.connect(
     user=os.getenv("SNOWFLAKE_USER"),
     private_key_encoded=os.getenv("SNOWFLAKE_PRIVATE_KEY_B64"),
     account=os.getenv("SNOWFLAKE_ACCOUNT"),
@@ -31,13 +34,13 @@ polygon_api_key = os.getenv("POLYGON_API_KEY") '''
 
 # Retrieve current CIKs from dim_company dimension table in Snowflake
 with snowflake_conn.cursor() as cursor:
-        cursor.execute("""
-                select 
-                distinct 
-                ticker
-                from investment_analytics.core.dim_company
-                where is_current = TRUE """)
-        tickers = [f"AM.{row[0]}" for row in cursor.fetchall()] '''
+    cursor.execute("""
+            select 
+            distinct 
+            ticker
+            from investment_analytics.core.dim_company
+            where is_current = TRUE """)
+    tickers = [f"AM.{row[0]}" for row in cursor.fetchall()]
 
 # Kafka config
 KAFKA_BOOTSTRAP_SERVERS = "localhost:8097" #kafka-1:9092,kafka-2:9092,kafka-3:9093 for access inside containers otherwise use localhost:8097
@@ -81,12 +84,6 @@ producer_config = {
 
 producer = SerializingProducer(producer_config)
 
-''' Stop kafka stream after 30 minutes commented out for testing purposes '''
-# Timer setup
-# start_time = time.time()
-# run_duration = 30 * 60  # 30 minutes
-
-'''
 # WebSocket client setup
 ws_client = WebSocketClient(
     api_key=polygon_api_key,
@@ -96,56 +93,15 @@ ws_client = WebSocketClient(
 
 # Subscribe to all tickers
 ws_client.subscribe(*tickers)
-'''
 
-dummy_tickers = ['AAPL', 'ABNB', 'AAL']
-
-def generate_dummy_message(ticker: str, accumulated_volume:int):
-    """Generate a fake stock aggregate message."""
-    volume = random.randint(100, 5000)
-    closing_price = round(random.uniform(100, 3000), 2)
-    vwap = closing_price * random.uniform(0.95, 1.05)
-    avg_trade_size = volume / random.randint(10, 50)
-
-    return {
-        "ticker_symbol": ticker,
-        "event_timestamp": int(datetime.now(tz=timezone.utc).timestamp() * 1000),
-        "volume": volume,
-        "accumulated_volume": accumulated_volume + volume,
-        "volume_weighted_average_price": vwap,
-        "closing_price": closing_price,
-        "average_trade_size": avg_trade_size
-    }
-
-# Handle messages
-try:
-    accumulated_volumes = {ticker: 0 for ticker in dummy_tickers}
-    while True:
-        for ticker in dummy_tickers:
-            msg = generate_dummy_message(ticker, accumulated_volumes[ticker])
-            accumulated_volumes[ticker] = msg["accumulated_volume"]
-
-            try:
-                producer.produce(topic=KAFKA_TOPIC, key=ticker, value=msg)
-                print(f"Produced dummy: {msg}")
-            except Exception as e:
-                print(f"Kafka produce error: {e}")
-
-        producer.poll(0)
-        time.sleep(60)  # simulate 60-second streaming interval
-
-except KeyboardInterrupt:
-    print("Manual interruption. Flushing Kafka producer...")
-    producer.flush()
-
-'''def handle_msg(msgs: List[WebSocketMessage]):
+def handle_msg(msgs: List[WebSocketMessage]):
     for m in msgs:
         if not m.symbol:  # Skip malformed messages
             continue
 
         message = {
             "ticker_symbol": m.symbol,
-            "timestamp": m.end_timestamp,
+            "event_timestamp": m.end_timestamp,
             "volume": m.volume,
             "accumulated_volume": m.accumulated_volume,
             "volume_weighted_average_price": m.vwap,
@@ -155,9 +111,9 @@ except KeyboardInterrupt:
 
         try:
             producer.produce(topic=os.getenv("KAFKA_TOPIC"), key=m.symbol, value=message)
-            print(f"Produced: {m.symbol} @ {m.end_timestamp}")
+            logger.info(f"Produced: {m.symbol} @ {m.end_timestamp}")
         except Exception as e:
-            print(f"Kafka produce error: {e}")
+            logger.error(f"Kafka produce error: {e}", exc_info=True)
 
     # Flush periodically
     producer.poll(0)
@@ -166,9 +122,13 @@ except KeyboardInterrupt:
 try:
     ws_client.run(handle_msg)
 except KeyboardInterrupt:
-    print("Manual interruption. Flushing Kafka producer and closing WebSocket...")
+    logger.info("Manual interruption. Flushing Kafka producer and closing WebSocket...")
     producer.flush()
-    ws_client.close()'''
+    ws_client.close()
+except Exception as e:
+    logger.exception(f"WebSocket runtime error: {e}")
+    producer.flush()
+    ws_client.close()
 
 
 

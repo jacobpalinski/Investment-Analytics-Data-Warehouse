@@ -1,3 +1,4 @@
+-- Insert new record into dimension table if it doesn't already exist
 merge into investment_analytics.financials.dim_period d
 using (
     select distinct fiscal_year, fiscal_quarter

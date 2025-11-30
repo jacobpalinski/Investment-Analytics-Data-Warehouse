@@ -29,7 +29,6 @@ DELETE_RECORDS_PATH = os.path.join(BASE_DIR, 'sql', 'delete_records.sql')
 DERIVE_RATIOS_PATH = os.path.join(BASE_DIR, 'sql', 'derive_ratios.sql')
 DELETE_NULL_RATIOS_PATH = os.path.join(BASE_DIR, 'sql', 'delete_null_ratios.sql')
 POPULATE_QUARTER_PATH = os.path.join(BASE_DIR, 'sql', 'populate_quarter.sql')
-CONVERT_FINANCIAL_YEAR_PATH = os.path.join(BASE_DIR, 'sql', 'convert_financial_year.sql')
 INSERT_DIM_PERIOD_PATH = os.path.join(BASE_DIR, 'sql', 'insert_dim_period.sql')
 INSERT_FACT_FINANCIALS_PATH = os.path.join(BASE_DIR, 'sql', 'insert_fact_financials.sql')
 DATA_QUALITY_TESTS_STAGING_PATH = os.path.join(BASE_DIR, 'sql', 'data_quality_tests_staging_financials.sql')
@@ -46,7 +45,6 @@ DELETE_RECORDS = read_sql_file(DELETE_RECORDS_PATH)
 DERIVE_RATIOS = read_sql_file(DERIVE_RATIOS_PATH)
 DELETE_NULL_RATIOS = read_sql_file(DELETE_NULL_RATIOS_PATH)
 POPULATE_QUARTER = read_sql_file(POPULATE_QUARTER_PATH)
-CONVERT_FINANCIAL_YEAR = read_sql_file(CONVERT_FINANCIAL_YEAR_PATH)
 INSERT_DIM_PERIOD = read_sql_file(INSERT_DIM_PERIOD_PATH)
 INSERT_FACT_FINANCIALS = read_sql_file(INSERT_FACT_FINANCIALS_PATH)
 DQ_STAGING_SQL = read_sql_file(DATA_QUALITY_TESTS_STAGING_PATH)
@@ -103,12 +101,6 @@ with DAG(dag_id='financials_fact_dag',
     populate_quarter = SQLExecuteQueryOperator(
         task_id="populate_quarter",
         sql=POPULATE_QUARTER,
-        conn_id='snowflake_connection'
-    )
-
-    convert_financial_year = SQLExecuteQueryOperator(
-        task_id="convert_financial_year",
-        sql=CONVERT_FINANCIAL_YEAR,
         conn_id='snowflake_connection'
     )
     
@@ -168,8 +160,8 @@ with DAG(dag_id='financials_fact_dag',
     )
 
     # Define task dependencies
-    extraction >> insert_staging_financials >> keep_most_recent_record >> delete_records >> derive_ratios >> delete_null_ratios \
-    >> populate_quarter >> convert_financial_year >> data_quality_tests_staging >> data_quality_tests_staging_fail >> insert_dim_period >> insert_fact_financials \
+    extraction >> insert_staging_financials >> keep_most_recent_record >> delete_records >> derive_ratios \
+    >> delete_null_ratios >> populate_quarter >> data_quality_tests_staging >> data_quality_tests_staging_fail >> insert_dim_period >> insert_fact_financials \
     >> data_quality_tests_dimension >> data_quality_tests_dimension_fail >> data_quality_tests_fact >> data_quality_tests_fact_fail
 
     

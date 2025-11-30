@@ -1,3 +1,4 @@
+-- Insert new record into staging table
 merge into investment_analytics.staging.staging_non_company_news as target
 using (
 select

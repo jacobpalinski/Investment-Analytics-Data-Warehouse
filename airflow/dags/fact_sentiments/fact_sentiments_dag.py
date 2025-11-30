@@ -2,8 +2,8 @@
 import os
 from datetime import datetime, timedelta
 from utils.utils import read_sql_file
-from sentiments_fact_table.extraction_functions import extract_company_news, extract_non_company_news, extract_reddit_submissions
-from sentiments_fact_table.calculate_sentiment_scores import calculate_sentiment_scores_snowflake
+from fact_sentiments.extraction_functions import extract_company_news, extract_non_company_news, extract_reddit_submissions
+from fact_sentiments.calculate_sentiment_scores import calculate_sentiment_scores_snowflake
 from data_quality_checks_outcomes import fail_if_data_quality_tests_failed
 from airflow.sdk import DAG
 from airflow.providers.standard.operators.python import PythonOperator
@@ -68,7 +68,7 @@ with DAG(dag_id='fact_sentiments_dag',
     tags=['sentiments', 'fact', 'snowflake']
 ):
     
-    '''extract_non_company_news = PythonOperator(
+    extract_non_company_news = PythonOperator(
         task_id='extract_non_company_news',
         python_callable=extract_non_company_news,
         op_kwargs={
@@ -94,7 +94,7 @@ with DAG(dag_id='fact_sentiments_dag',
             ],
             'timeout': 15
         }
-    )'''
+    )
 
     insert_staging_non_company_news = SQLExecuteQueryOperator(
         task_id="insert_staging_non_company_news",
@@ -102,10 +102,10 @@ with DAG(dag_id='fact_sentiments_dag',
         conn_id='snowflake_connection'
     )
     
-    '''extract_company_news = PythonOperator(
+    extract_company_news = PythonOperator(
         task_id='extract_company_articles',
         python_callable=extract_company_news
-    )'''
+    )
 
     insert_staging_company_news = SQLExecuteQueryOperator(
         task_id="insert_staging_company_news",
@@ -113,14 +113,14 @@ with DAG(dag_id='fact_sentiments_dag',
         conn_id='snowflake_connection'
     )
 
-    '''extract_reddit_submissions = PythonOperator(
+    extract_reddit_submissions = PythonOperator(
         task_id='extract_reddit_submissions',
         python_callable=extract_reddit_submissions,
         op_kwargs={
             'subreddit_name': 'stockmarket',
             'submissions_limit': 1000
         }
-    )'''
+    )
 
     insert_staging_reddit_submissions = SQLExecuteQueryOperator(
         task_id="insert_staging_reddit_submissions",
@@ -223,7 +223,8 @@ with DAG(dag_id='fact_sentiments_dag',
     )
 
     # Define task dependencies
-    insert_staging_non_company_news >> insert_staging_company_news >> insert_staging_reddit_submissions >> insert_staging_combined_no_sentiment \
+    extract_non_company_news >> insert_staging_non_company_news >> extract_company_news >> insert_staging_company_news \
+    >> extract_reddit_submissions >> insert_staging_reddit_submissions >> insert_staging_combined_no_sentiment \
     >> remove_nulls_staging_combined_no_sentiment >> calculate_sentiment_scores_snowflake >> data_quality_tests_staging \
     >> data_quality_tests_staging_fail >> insert_dim_source >> insert_dim_sentiment_date \
     >> insert_fact_sentiments >> data_quality_tests_dim_source >> data_quality_tests_dim_source_fail >> data_quality_tests_dim_sentiment_date \

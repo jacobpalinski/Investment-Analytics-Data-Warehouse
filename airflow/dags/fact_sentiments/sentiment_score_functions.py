@@ -3,7 +3,6 @@ import pandas as pd
 from transformers import pipeline, AutoTokenizer, TFAutoModelForSeq2SeqLM
 from snowflake.connector.pandas_tools import write_pandas
 from dotenv import load_dotenv
-from utils.utils import create_snowflake_connection
 
 def initialise_model() -> pipeline:
     '''

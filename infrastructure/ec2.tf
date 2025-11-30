@@ -139,8 +139,26 @@ tags = {
 }
 }
 
+# Allocate Elastic IP
+resource "aws_eip" "ec2_eip" {
+  domain = "vpc"
+  tags = {
+    Name = "investment-analytics-ec2-eip"
+  }
+}
+
+# Attach Elastic IP to EC2 instance
+resource "aws_eip_association" "ec2_eip_assoc" {
+  instance_id   = aws_instance.host.id
+  allocation_id = aws_eip.ec2_eip.id
+}
+
 output "ssm_instance_id" {
   value = aws_instance.host.id
+}
+
+output "elastic_ip" {
+  value = aws_eip.ec2_eip.public_ip
 }
 
 

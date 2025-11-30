@@ -1,3 +1,4 @@
+-- Insert new record into fact table provided it doesn't already exist
 insert into investment_analytics.economic_indicators.fact_economic_indicators (
 economic_indicators_fact_key,
 indicator_date_key,

@@ -1,3 +1,4 @@
+-- Insert new record into fact table if it doesn't already exist
 merge into investment_analytics.financials.fact_financials f
 using (
     select distinct

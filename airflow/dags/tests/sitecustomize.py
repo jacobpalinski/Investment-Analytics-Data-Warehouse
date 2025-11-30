@@ -11,7 +11,7 @@ sys.modules["keras"] = mock_tf
 sys.modules["jax"] = MagicMock()
 sys.modules["jaxlib"] = MagicMock()
 
-# Mock heavy transformers module BEFORE it can be imported
+# Mock heavy transformers module before it can be imported
 mock_transformers = MagicMock()
 mock_transformers.pipeline = MagicMock()
 mock_transformers.AutoTokenizer = MagicMock()

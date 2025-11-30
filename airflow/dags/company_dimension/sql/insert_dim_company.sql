@@ -1,3 +1,4 @@
+-- Insert new record if does not already exist
 insert into investment_analytics.core.dim_company (
 company_key, 
 cik,

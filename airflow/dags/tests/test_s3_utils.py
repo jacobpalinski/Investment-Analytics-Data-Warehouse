@@ -24,7 +24,7 @@ class TestS3Utils:
         # Execute function
         result = s3_instance.get_object(bucket, key)
 
-        # Assert
+        # Assert object has been called
         assert result == expected_object
         mock_s3_client.get_object.assert_called_once_with(Bucket=bucket, Key=key)
     
@@ -43,7 +43,7 @@ class TestS3Utils:
         # Instantiate the S3 class
         s3_instance = S3("aws_access_key_id", "aws_secret_access_key")
 
-        # Assert
+        # Assert object has not been called
         with pytest.raises(Exception, match="NoSuchKey"):
             s3_instance.get_object(bucket, key)
 
@@ -67,7 +67,7 @@ class TestS3Utils:
         # Execute function
         s3_instance.put_object(bucket, key, data)
 
-        # Assert
+        # Assert object has been put into bucket
         mock_s3_client.put_object.assert_called_once_with(Bucket=bucket, Key=key, Body=data)
 
     def test_s3_put_object_failure(self, mocker):
@@ -86,7 +86,7 @@ class TestS3Utils:
         # Instantiate the S3 class
         s3_instance = S3("aws_access_key_id", "aws_secret_access_key")
 
-        # Assert
+        # Assert object has not been put into object
         with pytest.raises(Exception, match="Upload failed"):
             s3_instance.put_object(bucket, key, data)
 
@@ -118,7 +118,7 @@ class TestS3Utils:
         # Execute function
         s3_instance.update_metadata(bucket, metadata_object, metadata_key)
 
-        # Assert — ensure put_object was called with updated metadata
+        # Assert put_object was called with updated metadata
         args, kwargs = mock_s3_client.put_object.call_args
         updated_data = json.loads(kwargs["Body"].decode("utf-8"))
 
@@ -145,7 +145,7 @@ class TestS3Utils:
         # Instantiate the S3 class
         s3_instance = S3("aws_access_key_id", "aws_secret_access_key")
 
-        # Assert
+        # Assert metadata has not been successfully updated
         with pytest.raises(Exception, match="Metadata not found"):
             s3_instance.update_metadata(bucket, metadata_object, metadata_key)
 

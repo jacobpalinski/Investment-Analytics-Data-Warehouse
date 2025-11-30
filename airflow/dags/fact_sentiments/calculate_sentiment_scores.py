@@ -1,11 +1,10 @@
 # Import modules
 import os
 import pandas as pd
-from snowflake.connector.pandas_tools import write_pandas
 from dotenv import load_dotenv
-from utils.utils import create_snowflake_connection
-from sentiments_fact_table.sentiment_score_functions import initialise_model, initialise_tokenizer, calculate_sentiment_scores, process_text_with_chunking, \
+from dags.fact_sentiments.sentiment_score_functions import initialise_model, initialise_tokenizer, calculate_sentiment_scores, process_text_with_chunking, \
 process_in_batches_short_description, process_in_batches_long_description
+from dags.utils.snowflake_utils import Snowflake
 
 def calculate_sentiment_scores_snowflake():
     '''
@@ -15,15 +14,17 @@ def calculate_sentiment_scores_snowflake():
     # Load environment variables
     load_dotenv()
 
-    # Create Snowflake connection
-    snowflake_conn = create_snowflake_connection(
+    # Instantiate Snowflake Client
+    snowflake_client = Snowflake(
         user=os.getenv("SNOWFLAKE_USER"),
-        private_key_encoded=os.getenv("SNOWFLAKE_PRIVATE_KEY_B64"),
         account=os.getenv("SNOWFLAKE_ACCOUNT"),
-        warehouse='INVESTMENT_ANALYTICS_DWH',
-        database='INVESTMENT_ANALYTICS',
-        schema='STAGING'
-    )
+        private_key_encoded=os.getenv("SNOWFLAKE_PRIVATE_KEY_B64"))
+
+    # Create Snowflake connection
+    snowflake_conn = snowflake_client.create_connection(
+    warehouse='INVESTMENT_ANALYTICS_DWH',
+    database='INVESTMENT_ANALYTICS',
+    schema='STAGING')
 
     # Retrieve all records from staging_combined_no_sentiment table in Snowflake
     with snowflake_conn.cursor() as cursor:
@@ -70,8 +71,7 @@ def calculate_sentiment_scores_snowflake():
     final_df.columns = map(str.upper, final_df.columns)
 
     # Load into a Snowflake temp table
-    success, nchunks, nrows, _ = write_pandas(snowflake_conn, final_df, table_name="STAGING_COMBINED_WITH_SENTIMENT_TEMP")
-    print(f"Staged {nrows} rows into STAGING_COMBINED_WITH_SENTIMENT_TEMP. Success: {success}")
+    snowflake_client.load_to_snowflake(connection=snowflake_conn, data=final_df, target_table='STAGING_COMBINED_WITH_SENTIMENT_TEMP')
 
     with snowflake_conn.cursor() as cursor:
         cursor.execute("""
@@ -106,12 +106,9 @@ def calculate_sentiment_scores_snowflake():
                         source_data.sentiment_score
                         )
                     """)
-        print("Merged data from STAGING_COMBINED_WITH_SENTIMENT_TEMP into STAGING_COMBINED_WITH_SENTIMENT")
-        
         cursor.execute("""
                         delete from investment_analytics.staging.staging_combined_with_sentiment_temp
                 """)
-        print("Deleted contents of STAGING_COMBINED_WITH_SENTIMENT table")
 
 
 

@@ -1,3 +1,4 @@
+-- Insert new record in dimension provided it doesn't already exist
 merge into investment_analytics.sentiment.dim_source d
 using (
     select 

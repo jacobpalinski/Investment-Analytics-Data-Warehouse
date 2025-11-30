@@ -7,6 +7,7 @@ from dags.tests.fixtures import mock_snowflake_client
 
 class TestSnowflake:
     def test_create_connection(self, mocker):
+        """ Test successful snowflake connection """
         # Create variables for function
         user = "test_user"
         account = "test_account"
@@ -45,6 +46,7 @@ class TestSnowflake:
         )
     
     def test_create_snowflake_connection_failure(self, mocker):
+        """ Test snowflake connection failure """
         # Create variables for function
         user = "test_user"
         account = "test_account"

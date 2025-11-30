@@ -1,3 +1,4 @@
+-- Insert new record into fact table provided it doesn't already exist
 merge into investment_analytics.sentiment.fact_sentiments f
 using (
     select 

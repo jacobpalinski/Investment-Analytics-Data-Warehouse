@@ -27,7 +27,7 @@ class SecApi:
     def __init__(self, user_agent: str):
         self.user_agent = user_agent
         self.base_url = "https://data.sec.gov/api/xbrl/companyfacts/CIK"
-        self.filter_keys = 'Revenues': ['revenues', 'income_statement'], 'GrossProfit': ['gross_profit', 'income_statement'], 'OperatingIncomeLoss': ['operating_income', 'income_statement'], 
+        self.filter_keys = {'Revenues': ['revenues', 'income_statement'], 'GrossProfit': ['gross_profit', 'income_statement'], 'OperatingIncomeLoss': ['operating_income', 'income_statement'], 
         'NetIncomeLoss': ['net_income', 'income_statement'], 
         'EarningsPerShareBasic': ['basic_earnings_per_share','income_statement'], 'EarningsPerShareDiluted': ['diluted_earnings_per_share', 'income_statement'], 
         'OperatingExpenses': ['operating_expenses', 'income_statement'], 'IncomeTaxExpenseBenefit': ['income_tax_benefit', 'income_statement'], 
@@ -70,13 +70,16 @@ class SecApi:
         Returns:
             dict: Dictionary with financials data
         """
+        facts = response.json().get('facts', {})
+        data = facts.get('us-gaap') or facts.get('ifrs-full', {})
+
         # Iterate through relevant filter keys in the response
         for key, values in self.filter_keys.items():
-            fact_data = response.get(key)
-            if not fact_data:
+            key_data = data.get(key)
+            if not key_data:
                 continue
 
-            units = fact_data.get('units')
+            units = key_data.get('units')
             if not units:
                 continue
             

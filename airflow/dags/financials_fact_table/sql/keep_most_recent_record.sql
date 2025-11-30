@@ -1,3 +1,4 @@
+-- If multiple filing dates delete all filings which are not the most recent
 delete from investment_analytics.staging.staging_financials
 where (cik, fiscal_year, fiscal_quarter, item) not in (
     select cik, fiscal_year, fiscal_quarter, item

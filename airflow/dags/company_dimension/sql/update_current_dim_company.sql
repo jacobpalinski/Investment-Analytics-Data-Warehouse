@@ -1,3 +1,4 @@
+-- If a new current record has been created update old record is_current to false
 update investment_analytics.core.dim_company as d
 set is_current = false,
 effective_end = current_date

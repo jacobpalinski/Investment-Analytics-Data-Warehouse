@@ -24,7 +24,7 @@ filename = f"nasdaq_listed_symbols_{datetime.now().strftime('%Y%m%d')}.csv"
 # Make Request
 response = requests.get(csv_url)
 
-# Create new file in S3 if request is successful and response is non empty
+# Create new file in S3 if request is successful and response is non empty and update metadata
 if response.status_code == 200 and len(response.content) > 0:
     try: 
         s3_client.put_object(
@@ -32,5 +32,6 @@ if response.status_code == 200 and len(response.content) > 0:
             key=filename,
             data=response.content
         )
+        s3_client.update_metadata(bucket=os.getenv('AWS_S3_BUCKET'), metadata_object='metadata.json', metadata_key='nasdaq_listed_tickers')
     except Exception as e: 
         logger.exception(f"Failed to extract nasdaq listed tickers: {e}")

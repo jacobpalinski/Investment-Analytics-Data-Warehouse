@@ -1,3 +1,4 @@
+-- Create investment metrics to be inserted into staging table
 insert into investment_analytics.staging.staging_financials (
     cik,
     filing_date,

@@ -1,3 +1,4 @@
+-- Merge raw table records into staging table provided record doesn't yet exist
 merge into investment_analytics.staging.staging_company_information as target
 using (
 select
