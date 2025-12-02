@@ -1,9 +1,16 @@
 name: Scheduled CI/CD
 
 on:
-  schedule:
-    - cron: "0 11 * * *"
-    - cron: "0 3 1 * *"
+  push:
+    branches:
+      - dev
+  #schedule:
+    #- cron: "0 11 * * *"
+    #- cron: "0 3 1 * *"
+  #workflow_run:
+    #workflows: ["Record Main Update"]
+    #types:
+      #- completed
 
 jobs:
   tickers_extraction:
@@ -109,21 +116,21 @@ jobs:
         working-directory: .
         run: pip install -r requirements.txt
       
-      - name: Download push marker
-        uses: actions/download-artifact@v4
-        with:
-          name: main-updated-flag
-        continue-on-error: true
+      #- name: Download push marker
+        #uses: actions/download-artifact@v4
+        #with:
+          #name: main-updated-flag
+        #continue-on-error: true
       
-      - name: Exit if no new push
-        run: |
-          if [ ! -f push_flag.txt ]; then
-            echo "No new code since last build. Exiting."
-            exit 0
-          fi
+      #- name: Exit if no new push
+        #run: |
+          #if [ ! -f push_flag.txt ]; then
+           # echo "No new code since last build. Exiting."
+            #exit 0
+          #fi
       
-      - name: Remove marker
-        run: rm push_flag.txt
+      #- name: Remove marker
+        #run: rm push_flag.txt
       
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
