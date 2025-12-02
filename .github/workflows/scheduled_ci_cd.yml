@@ -7,7 +7,7 @@ on:
 
 jobs:
   tickers_extraction:
-    if: github.event.schedule == "0 3 1 * *"
+    #if: github.event.schedule == "0 3 1 * *"
     environment: prd
     runs-on: ubuntu-latest
 
@@ -28,7 +28,7 @@ jobs:
         run: python extract_listed_tickers.py
 
   check-and-deploy:
-    if: github.event.schedule == "0 11 * * *"
+    #if: github.event.schedule == "0 11 * * *"
     environment: prd
     runs-on: ubuntu-latest
 
