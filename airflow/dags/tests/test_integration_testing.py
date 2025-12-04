@@ -318,7 +318,7 @@ class TestIntegrationTesting:
         # Create financials data list
         financials_data = []
 
-        for cik in ciks[:10]:
+        for cik in ciks[:10]: # Limit first 10 CIKs for testing
             try:
                 # Fetch financials for the CIK
                 financials = sec_api_client.sec_data_request(cik=cik)

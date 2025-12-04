@@ -59,18 +59,23 @@ class SecApi:
             logger.exception(f"SEC API error for {cik}: {e}")
             return {}
         
-    def extract_financial_data(self, cik: str, response: dict) -> dict:
+    def extract_financial_data(self, cik: str, response) -> dict:
         """
         Extracts financials data from SEC API response for a given CIK
 
         Args:
             cik (str): CIK data is being extracted for
-            response (dict): Dictionary with SEC API response data
+            response: Dictionary / JSON with SEC API response data
         
         Returns:
             dict: Dictionary with financials data
         """
-        facts = response.json().get('facts', {})
+        if isinstance(response, dict):
+            response_dict = response
+        else:
+            response_dict = response.json()
+        
+        facts = response_dict.get('facts', {})
         data = facts.get('us-gaap') or facts.get('ifrs-full', {})
 
         # Iterate through relevant filter keys in the response
