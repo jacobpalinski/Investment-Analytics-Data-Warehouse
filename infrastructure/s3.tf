@@ -1,5 +1,8 @@
 locals {
-  buckets = {"investment-analytics-data-warehouse", "investment-analytics-data-warehouse-tst" }
+  buckets = toset([
+    "investment-analytics-data-warehouse",
+    "investment-analytics-data-warehouse-tst"
+  ])
 }
 
 # Not needed once created for the first time
@@ -11,9 +14,7 @@ resource "aws_s3_bucket" "buckets" {
 resource "aws_s3_object" "metadata" {
   for_each = aws_s3_bucket.buckets
 
-  bucket = each.key
+  bucket = each.value.bucket
   key = "metadata.json"
   content = "{}"
-
-  depends_on = [aws_s3_bucket.buckets]
 }

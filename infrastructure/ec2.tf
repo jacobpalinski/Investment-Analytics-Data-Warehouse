@@ -10,7 +10,7 @@ data "aws_availability_zones" "available_zones" {}
 resource "aws_subnet" "ec2_vpc_subnet" {
 vpc_id = aws_vpc.ec2_vpc.id
 cidr_block = "10.0.1.0/24"
-availability_zone = data.aws_availability_zones.available.names[0]
+availability_zone = data.aws_availability_zones.available_zones.names[0]
 tags = { Name = "nginx-ec2-vpc-subnet"
 Environment = "prd" }
 }
@@ -46,7 +46,7 @@ resource "aws_vpc_security_group_ingress_rule" "allow_http_inbound" {
     from_port = 80
     to_port = 80
     ip_protocol = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_ipv4 = "0.0.0.0/0"
 }
 
 resource "aws_vpc_security_group_ingress_rule" "allow_https_inbound" {
@@ -54,14 +54,14 @@ resource "aws_vpc_security_group_ingress_rule" "allow_https_inbound" {
     from_port = 443
     to_port = 443
     ip_protocol = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_ipv4 = "0.0.0.0/0"
 }
 
 resource "aws_vpc_security_group_egress_rule" "allow_all_egress" {
   security_group_id = aws_security_group.nginx_proxy_sg.id
   from_port = 0
   ip_protocol = "-1"
-  cidr_blocks = ["0.0.0.0/0"]
+  cidr_ipv4 = "0.0.0.0/0"
 }
 
 resource "aws_security_group" "internal_proxy_sg" {
@@ -78,7 +78,7 @@ resource "aws_vpc_security_group_ingress_rule" "allow_internal_all_inbound" {
     from_port = 0
     to_port = 0
     ip_protocol = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_ipv4 = "0.0.0.0/0"
 }
 
 resource "aws_vpc_security_group_egress_rule" "allow_internal_all_egress" {
@@ -86,7 +86,7 @@ resource "aws_vpc_security_group_egress_rule" "allow_internal_all_egress" {
     from_port = 0
     to_port = 0
     ip_protocol = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_ipv4 = "0.0.0.0/0"
 }
 
 data "aws_iam_policy_document" "ec2_assume_role" {
@@ -126,13 +126,13 @@ data "aws_ami" "ubuntu" {
 resource "aws_instance" "host" {
 ami                         = data.aws_ami.ubuntu.id
 instance_type               = var.instance_type
-subnet_id                   = aws_subnet.aws_ec2_vpc_subnet.id
+subnet_id                   = aws_subnet.ec2_vpc_subnet.id
 vpc_security_group_ids      = [aws_security_group.nginx_proxy_sg.id, aws_security_group.internal_proxy_sg.id]
 iam_instance_profile        = aws_iam_instance_profile.ec2_profile.name
 associate_public_ip_address = true
 
 # Initial Setup Script
-user_data = file("./infrastructure/initial_script.sh")
+user_data = file("./initial_script.sh")
 
 tags = {
   Name = "investment-analytics-data-warehouse-ec2-host"

@@ -10,6 +10,13 @@ variable "aws_secret" {
   sensitive = true
 }
 
+# Declare aws_region variable
+variable "aws_region" {
+  type = string
+  sensitive = false
+  default = "ap-southeast-1"
+}
+
 # Declare aws_s3_bucket_variable
 variable "aws_s3_bucket" {
   type = string
