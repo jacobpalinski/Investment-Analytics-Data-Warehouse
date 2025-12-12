@@ -146,7 +146,7 @@ jobs:
       
       - name: Create kafka topic for testing
         working-directory: ./airflow/dags/tests
-        run: docker exec investment-analytics-data-warehouse-kafka-1 kafka-topics --bootstrap-server kafka-1:9092 --create --topic stock_aggregates_raw_tst --partitions 1 --replication-factor 1
+        run: docker exec tests_kafka-1_1 kafka-topics --bootstrap-server kafka-1:9092 --create --topic stock_aggregates_raw_tst --partitions 1 --replication-factor 1
       
       - name: Run tests
         working-directory: .
