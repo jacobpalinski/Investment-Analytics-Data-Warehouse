@@ -150,7 +150,7 @@ jobs:
       
       - name: Run tests
         working-directory: .
-        run: pytest airflow/dags/tests
+        run: pytest airflow/dags/tests -vv
       
       - name: Stop integration services
         working-directory: ./airflow/dags/tests
