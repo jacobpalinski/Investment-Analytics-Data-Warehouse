@@ -110,7 +110,7 @@ resource "aws_iam_role_policy_attachment" "ssm" {
 }
 
 resource "aws_iam_instance_profile" "ec2_profile" {
-  name = "investment-analytics-profile"
+  name_prefix = "investment-analytics-profile-"
   role = aws_iam_role.ec2_role.name
 }
 
