@@ -100,7 +100,7 @@ data "aws_iam_policy_document" "ec2_assume_role" {
 }
 
 resource "aws_iam_role" "ec2_role" {
-  name = "investment_analytics-ec2-role"
+  name_prefix = "investment_analytics-ec2-role-"
   assume_role_policy = data.aws_iam_policy_document.ec2_assume_role.json
 }
 
