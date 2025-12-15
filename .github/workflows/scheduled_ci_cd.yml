@@ -150,7 +150,8 @@ jobs:
       
       - name: Create kafka Snowflake connection for testing
         working-directory: ./airflow/dags/tests
-        run: curl -X POST -H 'Content-Type: application/json' --data @connector.json http://localhost:8083/connectors
+        run: |
+          curl -X POST -H 'Content-Type: application/json' --data @connector.json http://localhost:8083/connectors
       
       - name: Run tests
         working-directory: .
