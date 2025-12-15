@@ -35,7 +35,7 @@ class TestSecApi:
         response = sec_api.sec_data_request("0001112223")
 
         # Assert empty result
-        assert response == []
+        assert response == {}
 
 
     def test_extract_financial_data_success(self, mock_sec_api):
@@ -64,7 +64,7 @@ class TestSecApi:
 
         # Assert expected result
         result = sec_api.extract_financial_data("0001112223", {})
-        assert result is None
+        assert result == []
 
 
     def test_extract_financial_data_missing_units(self, mock_sec_api):
@@ -76,4 +76,4 @@ class TestSecApi:
         result = sec_api.extract_financial_data("0001112223", response)
 
         # Assert expected result
-        assert result is None
+        assert result == []

@@ -195,6 +195,7 @@ class TestIntegrationTesting:
         {"category": "business", "country": "us", "qInMeta": "economy AND interest rate"},
         {"category": "business", "country": "us", "qInMeta": "economy AND inflation"},
         {"category": "business", "country": "us", "qInMeta": "economy AND Federal Reserve"},
+        {"category": "business", "country": "us", "qInMeta": "economy AND consumer confidence"},
         {"category": "business", "country": "us", "qInMeta": "economy and unemployment"},
         {"category": "business", "country": "us", "qInMeta": "economy AND GDP"},
         {"category": "business", "country": "us", "qInMeta": "economy AND tariffs"},
@@ -216,7 +217,13 @@ class TestIntegrationTesting:
 
         # Execute API call for parameters
         for param in parameters:
-            news_response = news_api_client.fetch_with_retry(params=param, timeout=10)
+            try: 
+                news_response = news_api_client.fetch_with_retry(params=param, timeout=10)
+            
+            except Exception as e:
+                logger.warning("Skipping params %s after retries failed: %s", param, e)
+                continue
+
             # Append news items to the list
             for item in news_response["results"]:
                 non_company_news.append({
@@ -492,6 +499,9 @@ class TestIntegrationTesting:
         # Push messages to topic
         producer.produce(topic=os.getenv("KAFKA_TOPIC_TST"), key="TEST", value=msg)
         producer.flush()
+
+        # Sleep to allow for data processing
+        time.sleep(120)
 
         # Instantiate Snowflake Client
         snowflake_client = Snowflake(

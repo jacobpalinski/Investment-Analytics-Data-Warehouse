@@ -75,8 +75,14 @@ class SecApi:
         else:
             response_dict = response.json()
         
+        # Retrieve either US GAAP or IFRS data from response
         facts = response_dict.get('facts', {})
-        data = facts.get('us-gaap') or facts.get('ifrs-full', {})
+        if 'us-gaap' in facts:
+            data = facts['us-gaap']
+        elif 'ifrs-full' in facts:
+            data = facts['ifrs-full']
+        else:
+            data = {}
 
         results = []
 
