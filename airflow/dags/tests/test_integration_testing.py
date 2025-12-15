@@ -58,7 +58,7 @@ class TestIntegrationTesting:
         # Retrieve latest date of Nasdaq listed tickers extraction
         metadata = s3_client.get_object(bucket=os.getenv('AWS_S3_TST_BUCKET'), key='metadata.json')
         metadata = json.loads(metadata['Body'].read().decode('utf-8'))
-        latest_run_date = metadata.get('nasdaq_listed_tickers')[0]
+        latest_run_date = metadata.get('nasdaq_listed_tickers')
         latest_run_date_no_hyphen = datetime.strptime(latest_run_date, "%Y-%m-%d").strftime("%Y%m%d")
 
         # Retrieve Nasdaq listed tickers csv file from S3
@@ -195,7 +195,6 @@ class TestIntegrationTesting:
         {"category": "business", "country": "us", "qInMeta": "economy AND interest rate"},
         {"category": "business", "country": "us", "qInMeta": "economy AND inflation"},
         {"category": "business", "country": "us", "qInMeta": "economy AND Federal Reserve"},
-        {"category": "business", "country": "us", "qInMeta": "economy AND consumer confidence"},
         {"category": "business", "country": "us", "qInMeta": "economy and unemployment"},
         {"category": "business", "country": "us", "qInMeta": "economy AND GDP"},
         {"category": "business", "country": "us", "qInMeta": "economy AND tariffs"},
@@ -325,7 +324,7 @@ class TestIntegrationTesting:
 
                 # Append financials items to the list            
                 parsed_financials = sec_api_client.extract_financial_data(cik=cik, response=financials)
-                financials_data.append(parsed_financials)
+                financials_data.extend(parsed_financials)
             except Exception as e:
                 logger.error(f"Error fetching financials for CIK {cik}: {e}", exc_info=True)
         

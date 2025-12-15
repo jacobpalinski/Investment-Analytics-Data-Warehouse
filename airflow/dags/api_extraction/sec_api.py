@@ -68,7 +68,7 @@ class SecApi:
             response: Dictionary / JSON with SEC API response data
         
         Returns:
-            dict: Dictionary with financials data
+            list: List containing extracted financial data
         """
         if isinstance(response, dict):
             response_dict = response
@@ -77,6 +77,8 @@ class SecApi:
         
         facts = response_dict.get('facts', {})
         data = facts.get('us-gaap') or facts.get('ifrs-full', {})
+
+        results = []
 
         # Iterate through relevant filter keys in the response
         for key, values in self.filter_keys.items():
@@ -105,7 +107,18 @@ class SecApi:
             currency = first_currency
             value = last_record.get('val')
             
-            return {'cik': cik, 'fiscal_year': fiscal_year, 'fiscal_quarter': fiscal_quarter, 'filing_date': filing_date, 'financial_statement': financial_statement, 'item': item, 'currency': currency, 'value': value}
+            results.append({
+            'cik': cik,
+            'fiscal_year': last_record.get('fy'),
+            'fiscal_quarter': last_record.get('fp'),
+            'filing_date': last_record.get('filed'),
+            'financial_statement': values[1],
+            'item': values[0],
+            'currency': first_currency,
+            'value': last_record.get('val')
+            })
+        
+        return results
 
 
 

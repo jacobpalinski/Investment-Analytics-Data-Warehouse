@@ -35,7 +35,7 @@ class TestSecApi:
         response = sec_api.sec_data_request("0001112223")
 
         # Assert empty result
-        assert response == {}
+        assert response == []
 
 
     def test_extract_financial_data_success(self, mock_sec_api):
@@ -46,16 +46,16 @@ class TestSecApi:
         result = sec_api.extract_financial_data("0001112223", mock_response_data)
 
         # Assert expected response
-        assert result == {
-            "cik": "0001112223",
+        assert result == [
+            {"cik": "0001112223",
             "fiscal_year": 2024,
             "fiscal_quarter": "Q4",
             "filing_date": "2025-01-10",
             "financial_statement": "income_statement",
             "item": "revenues",
             "currency": "USD",
-            "value": 500000,
-        }
+            "value": 500000}
+        ]
 
     def test_extract_financial_data_no_matching_key(self, mock_sec_api):
         """ Test missing filter key returns None """
