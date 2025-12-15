@@ -43,6 +43,8 @@ class TestSecApi:
         # Mock SEC API and successful response
         sec_api, _, mock_response_data = mock_sec_api
 
+        print('This is mock_response data', mock_response_data)
+
         result = sec_api.extract_financial_data("0001112223", mock_response_data)
 
         # Assert expected response
