@@ -130,31 +130,44 @@ def mock_reddit_env(monkeypatch):
     }
 
 @pytest.fixture
-def mock_sec_api():
-    " Fixture that mocks SecApi class for testing"
+def sec_api():
+    """Provides a SecApi instance"""
+    return SecApi(user_agent="test_agent")
+
+
+@pytest.fixture
+def mock_sec_success_response():
+    """Mocks a successful SEC API response object"""
     class MockResponse:
         status_code = 200
 
-    sec_api = SecApi(user_agent="test_agent")
+        def json(self):
+            return mock_sec_full_response()
 
-    mock_success_response = MockResponse()
+    return MockResponse()
 
-    mock_response_data = {
-        "Revenues": {
-            "units": {
-                "USD": [
-                    {
-                        "fy": 2024,
-                        "fp": "Q4",
-                        "filed": "2025-01-10",
-                        "val": 500000,
+
+@pytest.fixture
+def mock_sec_full_response():
+    """Full SEC API response payload"""
+    return {
+        "facts": {
+            "us-gaap": {
+                "Revenues": {
+                    "units": {
+                        "USD": [
+                            {
+                                "fy": 2024,
+                                "fp": "Q4",
+                                "filed": "2025-01-10",
+                                "val": 500000,
+                            }
+                        ]
                     }
-                ]
+                }
             }
         }
     }
-
-    return sec_api, mock_success_response, mock_response_data
 
 
 
