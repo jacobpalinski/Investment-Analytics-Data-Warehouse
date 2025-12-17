@@ -2,7 +2,7 @@
 import pytest
 import requests
 from dags.api_extraction.sec_api import SecApi
-from dags.tests.fixtures import mock_sec_api
+from dags.tests.fixtures import sec_api, mock_sec_success_response, mock_sec_full_response
 
 class TestSecApi:
     """ Test suite for SecApi class """
