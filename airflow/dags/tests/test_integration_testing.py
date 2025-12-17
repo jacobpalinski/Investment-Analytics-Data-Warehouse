@@ -53,7 +53,7 @@ class TestIntegrationTesting:
         polygon_api_client = PolygonApi(polygon_api_key=os.getenv("POLYGON_API_KEY"))
 
         # Instantiate S3 class
-        s3_client = S3(aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"), aws_secret_access_key=os.getenv("AWS_SECRET"))
+        s3_client = S3(aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"), aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"))
 
         # Retrieve latest date of Nasdaq listed tickers extraction
         metadata = s3_client.get_object(bucket=os.getenv('AWS_S3_TST_BUCKET'), key='metadata.json')
@@ -412,7 +412,7 @@ class TestIntegrationTesting:
         Tests extract_nasdaq_listed_tickers from GitHub URL and create csv with tickers in S3
         """
         # Initantiates S3 class
-        s3_client = S3(aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"), aws_secret_access_key=os.getenv("AWS_SECRET"))
+        s3_client = S3(aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"), aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"))
 
         # Github CSV file URL
         csv_url = 'https://raw.githubusercontent.com/datasets/nasdaq-listings/refs/heads/main/data/nasdaq-listed.csv'

@@ -6,7 +6,7 @@ locals {
 resource "aws_ssm_parameter" "ssm_params" {
   for_each = {
     ACCESS_KEY_ID = var.aws_access_key_id
-    SECRET = var.aws_secret
+    SECRET_ACCESS_KEY = var.aws_secret_access_key
     S3_BUCKET = var.aws_s3_bucket
     S3_TST_BUCKET = var.aws_s3_tst_bucket
     AIRFLOW_UID = var.airflow_uid
