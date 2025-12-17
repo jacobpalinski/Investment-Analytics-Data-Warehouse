@@ -227,27 +227,30 @@ jobs:
         run: |
           echo "Initialise Airflow and create AWS and Snowflake connections"
           aws ssm send-command \
-          --region "$AWS_REGION" \
-          --instance-ids "$INSTANCE_ID" \
-          --document-name "AWS-RunShellScript" \
-          --comment "Initialise Airflow Docker containers and connections" \
-          --parameters '{
+            --region "$AWS_REGION" \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --comment "Initialise Airflow Docker containers and connections" \
+            --parameters "$(cat <<'EOF'
+            {
             "commands": [
             "docker compose run --rm airflow-init",
             "docker compose up postgres redis airflow-apiserver airflow-scheduler airflow-dag-processor airflow-worker airflow-triggerer -d",
             "sleep 120",
             "docker exec investment-analytics-data-warehouse-airflow-scheduler-1 airflow connections add snowflake_default \
-              --conn-type snowflake \
-              --conn-login '"'"${SNOWFLAKE_USER}"'"' \
-              --conn-password '"'"${SNOWFLAKE_PASSWORD}"'"' \
-              --conn-account '"'"${SNOWFLAKE_ACCOUNT}"'"' \
-              --conn-extra '\''{\"database\": \"'"INVESTMENT_ANALYTICS"'\", \"warehouse\": \"'"INVESTMENT_ANALYTICS_DWH"'\", \"role\": \"'"${SNOWFLAKE_ROLE}"'\"}'\''",
+            --conn-type snowflake \
+            --conn-login \"$SNOWFLAKE_USER\" \
+            --conn-password \"$SNOWFLAKE_PASSWORD\" \
+            --conn-account \"$SNOWFLAKE_ACCOUNT\" \
+            --conn-extra '{\"database\":\"INVESTMENT_ANALYTICS\",\"warehouse\":\"INVESTMENT_ANALYTICS_DWH\",\"role\":\"$SNOWFLAKE_ROLE\"}'",
             "docker exec investment-analytics-data-warehouse-airflow-scheduler-1 airflow connections add aws_default \
-              --conn-type aws \
-              --conn-login '"'"${AWS_ACCESS_KEY_ID}"'"' \
-              --conn-password '"'"${AWS_SECRET_ACCESS_KEY}"'"'"
-            ]
-          }'
+            --conn-type aws \
+            --conn-login \"$AWS_ACCESS_KEY_ID\" \
+            --conn-password \"$AWS_SECRET_ACCESS_KEY\""
+          ]
+          }
+          EOF
+          )"
       
       - name: Setup Kafka Containers
         run: |
