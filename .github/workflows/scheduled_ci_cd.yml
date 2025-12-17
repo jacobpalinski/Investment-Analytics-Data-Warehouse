@@ -237,16 +237,8 @@ jobs:
             "docker compose run --rm airflow-init",
             "docker compose up postgres redis airflow-apiserver airflow-scheduler airflow-dag-processor airflow-worker airflow-triggerer -d",
             "sleep 120",
-            "docker exec investment-analytics-data-warehouse-airflow-scheduler-1 airflow connections add snowflake_default \
-            --conn-type snowflake \
-            --conn-login \"$SNOWFLAKE_USER\" \
-            --conn-password \"$SNOWFLAKE_PASSWORD\" \
-            --conn-account \"$SNOWFLAKE_ACCOUNT\" \
-            --conn-extra '{\"database\":\"INVESTMENT_ANALYTICS\",\"warehouse\":\"INVESTMENT_ANALYTICS_DWH\",\"role\":\"$SNOWFLAKE_ROLE\"}'",
-            "docker exec investment-analytics-data-warehouse-airflow-scheduler-1 airflow connections add aws_default \
-            --conn-type aws \
-            --conn-login \"$AWS_ACCESS_KEY_ID\" \
-            --conn-password \"$AWS_SECRET_ACCESS_KEY\""
+            "docker exec investment-analytics-data-warehouse-airflow-scheduler-1 airflow connections add snowflake_default --conn-type snowflake --conn-login \"$SNOWFLAKE_USER\" --conn-password \"$SNOWFLAKE_PASSWORD\" --conn-account \"$SNOWFLAKE_ACCOUNT\" --conn-extra '{\"database\":\"INVESTMENT_ANALYTICS\",\"warehouse\":\"INVESTMENT_ANALYTICS_DWH\",\"role\":\"$SNOWFLAKE_ROLE\"}'",
+            "docker exec investment-analytics-data-warehouse-airflow-scheduler-1 airflow connections add aws_default --conn-type aws --conn-login \"$AWS_ACCESS_KEY_ID\" --conn-password \"$AWS_SECRET_ACCESS_KEY\""
           ]
           }
           EOF
