@@ -256,8 +256,7 @@ jobs:
           "commands": [
           "docker compose up -d zookeeper-1 zookeeper-2 zookeeper-3 kafka-1 kafka-2 kafka-3 schema-registry kafka-connect",
           "docker exec investment-analytics-data-warehouse-kafka-1 kafka-topics --bootstrap-server kafka-1:9092 --create --topic stock_aggregates_raw --partitions 1 --replication-factor 3",
-          "cd streaming",
-          "curl -X POST -H 'Content-Type: application/json' --data @connector.json http://localhost:8083/connectors"
+          "cd streaming && curl -X POST -H \"Content-Type: application/json\" --data @connector.json http://localhost:8083/connectors"
           ]
           }'
       
@@ -269,10 +268,13 @@ jobs:
           --instance-ids "$INSTANCE_ID" \
           --document-name "AWS-RunShellScript" \
           --comment "Metabase login" \
-          --parameters '{
-          "commands": [
-          "curl -X POST -H 'Content-Type: application/json' -d '{"username": "$METABASE_USERNAME", "password": "$METABASE_PASSWORD"}'"
-          }'
+          --parameters "{
+          \"commands\": [
+          \"curl -X POST -H \\\"Content-Type: application/json\\\" \
+          -d '{\\\"username\\\": \\\"$METABASE_USERNAME\\\", \\\"password\\\": \\\"$METABASE_PASSWORD\\\"}' \
+          http://localhost:3000/api/session\"
+          ]
+          }"
 
 
 
