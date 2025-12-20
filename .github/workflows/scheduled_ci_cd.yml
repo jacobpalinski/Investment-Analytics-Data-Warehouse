@@ -175,14 +175,7 @@ jobs:
             --comment "Full deployment" \
             --parameters '{
               "commands": [
-                "set -e",
-                "cd ~",
-                "if [ -d Investment-Analytics-Data-Warehouse/.git ]; then \
-                    cd Investment-Analytics-Data-Warehouse && git fetch origin && git checkout dev && git pull origin dev; \
-                else \
-                    git clone --branch dev https://github.com/jacobpalinski/Investment-Analytics-Data-Warehouse.git && \
-                    cd Investment-Analytics-Data-Warehouse; \
-                fi",
+                "if [ -d Investment-Analytics-Data-Warehouse/.git ]; then cd Investment-Analytics-Data-Warehouse && git fetch origin && git checkout dev && git pull origin dev; else git clone --branch dev https://github.com/jacobpalinski/Investment-Analytics-Data-Warehouse.git; cd Investment-Analytics-Data-Warehouse; fi",
                 "chmod +x deploy.sh",
                 "./deploy.sh"
               ]
