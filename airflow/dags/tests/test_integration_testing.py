@@ -501,7 +501,7 @@ class TestIntegrationTesting:
         producer.flush()
 
         # Sleep to allow for data processing
-        time.sleep(60)
+        time.sleep(240)
 
         # Instantiate Snowflake Client
         snowflake_client = Snowflake(
