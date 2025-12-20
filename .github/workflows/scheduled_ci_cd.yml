@@ -175,7 +175,7 @@ jobs:
             --document-name "AWS-RunShellScript" \
             --comment "Launch EC2 instance and create .env file" \
             --parameters '{ "commands": [
-            "if [ -d Investment-Analytics-Data-Warehouse/.git ]; then cd Investment-Analytics-Data-Warehouse && git pull; else git clone https://github.com/jacobpalinski/Investment-Analytics-Data-Warehouse.git; cd Investment-Analytics-Data-Warehouse; fi",
+            "if [ -d Investment-Analytics-Data-Warehouse/.git ]; then cd Investment-Analytics-Data-Warehouse && git fetch origin && git checkout dev && git pull origin dev; else git clone --branch dev https://github.com/jacobpalinski/Investment-Analytics-Data-Warehouse.git; cd Investment-Analytics-Data-Warehouse; fi",
             "echo \"\" > .env",
             "echo \"AWS_ACCESS_KEY_ID=$(aws ssm get-parameter --name \"/investment_analytics_data_warehouse/prd/ACCESS_KEY_ID\" --with-decryption --query \"Parameter.Value\" --output text)\" >> .env",
             "echo \"AWS_SECRET=$(aws ssm get-parameter --name \"/investment_analytics_data_warehouse/prd/SECRET\" --with-decryption --query \"Parameter.Value\" --output text)\" >> .env",
