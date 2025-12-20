@@ -166,31 +166,6 @@ jobs:
           INSTANCE_ID=$(terraform output -raw ssm_instance_id)
           echo "INSTANCE_ID=$INSTANCE_ID" >> $GITHUB_ENV
       
-      - name: Create virtual environment and install dependencies
-        run: |
-          echo "Creating virtual environment and installing dependencies"
-          aws ssm send-command \
-              --region $AWS_REGION \
-              --instance-ids "$INSTANCE_ID" \
-              --document-name "AWS-RunShellScript" \
-              --comment "Create virtual environment and install dependencies" \
-              --parameters '{ "commands": [
-              "sudo apt update",
-              "sudo apt install ca-certificates curl",
-              "sudo install -m 0755 -d /etc/apt/keyrings",
-              "sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc",
-              "sudo chmod a+r /etc/apt/keyrings/docker.asc",
-              "sudo tee /etc/apt/sources.list.d/docker.sources <<EOF\nTypes: deb\nURIs: https://download.docker.com/linux/ubuntu\nSuites: $(. /etc/os-release && echo \"${UBUNTU_CODENAME:-$VERSION_CODENAME}\")\nComponents: stable\nSigned-By: /etc/apt/keyrings/docker.asc\nEOF",
-              "sudo apt update",
-              "sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin",
-              "sudo systemctl enable docker",
-              "sudo systemctl start docker",
-              "sudo apt install -y python3-venv python3-pip",
-              "if [ ! -d venv ]; then python3 -m venv venv; fi",
-              "source venv/bin/activate",
-              "if [ -f requirements.txt ]; then pip install -r requirements.txt; fi"
-              ] }'
-      
       - name: Launch EC2 instance and create .env file with variables from SSM parameter store
         run: |
           echo "Deploying to EC2 instance: $INSTANCE_ID"
@@ -233,6 +208,32 @@ jobs:
             "METABASE_PASSWORD=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/METABASE_PASSWORD --with-decryption --query Parameter.Value --output text)",            
             "chmod 600 .env"
             ]}'
+      
+      - name: Create virtual environment and install dependencies
+        run: |
+          echo "Creating virtual environment and installing dependencies"
+          aws ssm send-command \
+              --region $AWS_REGION \
+              --instance-ids "$INSTANCE_ID" \
+              --document-name "AWS-RunShellScript" \
+              --comment "Create virtual environment and install dependencies" \
+              --parameters '{ "commands": [
+              "sudo apt update",
+              "sudo apt install ca-certificates curl",
+              "sudo install -m 0755 -d /etc/apt/keyrings",
+              "sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc",
+              "sudo chmod a+r /etc/apt/keyrings/docker.asc",
+              "sudo tee /etc/apt/sources.list.d/docker.list <<< \"Types: deb\nURIs: https://download.docker.com/linux/ubuntu\nSuites: $(. /etc/os-release && echo \\\"${UBUNTU_CODENAME:-$VERSION_CODENAME}\\\")\nComponents: stable\nSigned-By: /etc/apt/keyrings/docker.asc\"",
+              "sudo apt update",
+              "sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin",
+              "sudo systemctl enable docker",
+              "sudo systemctl start docker",
+              "cd Investment-Analytics-Data-Warehouse",
+              "sudo apt install -y python3-venv python3-pip",
+              "if [ ! -d venv ]; then python3 -m venv venv; fi",
+              "source venv/bin/activate",
+              "if [ -f requirements.txt ]; then pip install -r requirements.txt; fi"
+              ] }'
       
       - name: Initialise Airflow and create AWS and Snowflake connections
         run: |
