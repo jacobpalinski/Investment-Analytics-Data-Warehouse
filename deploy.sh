@@ -1,0 +1,102 @@
+# Create .env file with parameters from AWS SSM Parameter Store
+cd ~/Investment-Analytics-Data-Warehouse
+
+cat <<EOF > .env
+AWS_ACCESS_KEY_ID=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/ACCESS_KEY_ID --with-decryption --query Parameter.Value --output text)
+AWS_SECRET_ACCESS_KEY=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SECRET --with-decryption --query Parameter.Value --output text)
+AWS_S3_BUCKET=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/S3_BUCKET --with-decryption --query Parameter.Value --output text)
+AWS_S3_TST_BUCKET=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/S3_TST_BUCKET --with-decryption --query Parameter.Value --output text)
+AIRFLOW_UID=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/AIRFLOW_UID --with-decryption --query Parameter.Value --output text)
+_AIRFLOW_WWW_USER_USERNAME=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/_AIRFLOW_WWW_USER_USERNAME --with-decryption --query Parameter.Value --output text)
+_AIRFLOW_WWW_USER_PASSWORD=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/_AIRFLOW_WWW_USER_PASSWORD --with-decryption --query Parameter.Value --output text)
+POLYGON_API_KEY=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/POLYGON_API_KEY --with-decryption --query Parameter.Value --output text)
+FINNHUB_API_KEY=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/FINNHUB_API_KEY --with-decryption --query Parameter.Value --output text)
+NEWS_API_KEY=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/NEWS_API_KEY --with-decryption --query Parameter.Value --output text)
+SNOWFLAKE_USER=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SNOWFLAKE_USER --with-decryption --query Parameter.Value --output text)
+SNOWFLAKE_PASSWORD=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SNOWFLAKE_PASSWORD --with-decryption --query Parameter.Value --output text)
+SNOWFLAKE_ACCOUNT=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SNOWFLAKE_ACCOUNT --with-decryption --query Parameter.Value --output text)
+SNOWFLAKE_PRIVATE_KEY_B64=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SNOWFLAKE_PRIVATE_KEY_B64 --with-decryption --query Parameter.Value --output text)
+SNOWFLAKE_PRIVATE_KEY_B64_FULL=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SNOWFLAKE_PRIVATE_KEY_B64_FULL --with-decryption --query Parameter.Value --output text)
+SNOWFLAKE_PRIVATE_KEY_PASSPHRASE=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SNOWFLAKE_PRIVATE_KEY_PASSPHRASE --with-decryption --query Parameter.Value --output text)
+KAFKA_BOOTSTRAP_SERVERS=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/KAFKA_BOOTSTRAP_SERVERS --with-decryption --query Parameter.Value --output text)
+KAFKA_TOPIC=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/KAFKA_TOPIC --with-decryption --query Parameter.Value --output text)
+SCHEMA_REGISTRY_URL=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SCHEMA_REGISTRY_URL --with-decryption --query Parameter.Value --output text)
+METABASE_USERNAME=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/METABASE_USERNAME --with-decryption --query Parameter.Value --output text)
+METABASE_PASSWORD=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/METABASE_PASSWORD --with-decryption --query Parameter.Value --output text)
+METABASE_PRIVATE_KEY=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/METABASE_PRIVATE_KEY --with-decryption --query Parameter.Value --output text)
+EOF
+
+# Create docker path
+export PATH=$PATH:/usr/bin
+
+# System dependencies installation
+sudo apt update
+sudo apt install -y ca-certificates curl gnupg python3-venv python3-pip
+
+# Install docker
+if ! command -v docker >/dev/null 2>&1; then
+  echo "Installing Docker..."
+  sudo install -d -m 0755 /etc/apt/keyrings
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo tee /etc/apt/keyrings/docker.gpg > /dev/null
+  sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+  echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+    https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" \
+    | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+  sudo apt update -y
+  sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+fi
+
+# Start and enable docker service
+sudo systemctl enable docker
+sudo systemctl start docker
+
+if [ ! -d venv ]; then
+  python3 -m venv venv
+fi
+
+source venv/bin/activate
+
+# Install python dependencies
+python3 -m pip install -r requirements.txt
+
+# Run Airflow docker containers
+docker compose run --rm airflow-init
+docker compose up -d postgres redis airflow-apiserver airflow-scheduler airflow-dag-processor airflow-worker airflow-triggerer
+
+# Wait until containers are up and running
+sleep 120
+
+# Create Snowflake connection in Airflow
+docker exec investment-analytics-data-warehouse-airflow-scheduler-1 \
+  airflow connections add snowflake_default \
+  --conn-type snowflake \
+  --conn-login "$SNOWFLAKE_USER" \
+  --conn-password "$SNOWFLAKE_PASSWORD" \
+  --conn-account "$SNOWFLAKE_ACCOUNT" \
+  --conn-extra "{\"database\":\"INVESTMENT_ANALYTICS\",\"warehouse\":\"INVESTMENT_ANALYTICS_DWH\",\"role\":\"$SNOWFLAKE_ROLE\"}"
+
+# Create AWS connection in Airflow
+docker exec investment-analytics-data-warehouse-airflow-scheduler-1 \
+  airflow connections add aws_default \
+  --conn-type aws \
+  --conn-login "$AWS_ACCESS_KEY_ID" \
+  --conn-password "$AWS_SECRET_ACCESS_KEY"
+
+# Run Kafka docker containers
+docker compose up -d zookeeper-1 zookeeper-2 zookeeper-3 kafka-1 kafka-2 kafka-3 schema-registry kafka-connect
+
+# Create Kafka topic
+docker exec investment-analytics-data-warehouse-kafka-1 kafka-topics --bootstrap-server kafka-1:9092 --create --topic stock_aggregates_raw --partitions 1 --replication-factor 3
+
+# Create Kafka Snowflake connector
+cd streaming
+curl -X POST -H "Content-Type: application/json" --data @connector.json http://localhost:8083/connectors
+
+# Login to Metabase
+curl -f -X POST -H "Content-Type: application/json" -d "{\"username\":\"$METABASE_USERNAME\",\"password\":\"$METABASE_PASSWORD\"}" http://localhost:3000/api/session
+
+
+
+

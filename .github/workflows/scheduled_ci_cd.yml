@@ -166,127 +166,28 @@ jobs:
           INSTANCE_ID=$(terraform output -raw ssm_instance_id)
           echo "INSTANCE_ID=$INSTANCE_ID" >> $GITHUB_ENV
       
-      - name: Launch EC2 instance and create .env file with variables from SSM parameter store
+      - name: Deploy to EC2 via SSM
         run: |
-          echo "Deploying to EC2 instance: $INSTANCE_ID"
-          aws ssm send-command \
-            --region $AWS_REGION \
-            --instance-ids "$INSTANCE_ID" \
-            --document-name "AWS-RunShellScript" \
-            --comment "Launch EC2 instance and create .env file" \
-            --parameters '{ "commands": [
-            "if [ -d Investment-Analytics-Data-Warehouse/.git ]; then cd Investment-Analytics-Data-Warehouse && git fetch origin && git checkout dev && git pull origin dev; else git clone --branch dev https://github.com/jacobpalinski/Investment-Analytics-Data-Warehouse.git; cd Investment-Analytics-Data-Warehouse; fi",
-            "echo \"\" > .env",
-            "AWS_ACCESS_KEY_ID=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/ACCESS_KEY_ID --with-decryption --query Parameter.Value --output text)",
-            "AWS_SECRET=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SECRET --with-decryption --query Parameter.Value --output text)",
-            "AWS_S3_BUCKET=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/S3_BUCKET --with-decryption --query Parameter.Value --output text)",
-            "AWS_S3_TST_BUCKET=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/S3_TST_BUCKET --with-decryption --query Parameter.Value --output text)",
-            "AIRFLOW_UID=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/AIRFLOW_UID --with-decryption --query Parameter.Value --output text)",
-            "_AIRFLOW_WWW_USER_USERNAME=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/_AIRFLOW_WWW_USER_USERNAME --with-decryption --query Parameter.Value --output text)",
-            "_AIRFLOW_WWW_USER_PASSWORD=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/_AIRFLOW_WWW_USER_PASSWORD --with-decryption --query Parameter.Value --output text)",
-            "POLYGON_API_KEY=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/POLYGON_API_KEY --with-decryption --query Parameter.Value --output text)",
-            "FINNHUB_API_KEY=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/FINNHUB_API_KEY --with-decryption --query Parameter.Value --output text)",
-            "NEWS_API_KEY=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/NEWS_API_KEY --with-decryption --query Parameter.Value --output text)",
-            "REDDIT_CLIENT_ID=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/REDDIT_CLIENT_ID --with-decryption --query Parameter.Value --output text)",
-            "REDDIT_CLIENT_SECRET=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/REDDIT_CLIENT_SECRET --with-decryption --query Parameter.Value --output text)",
-            "REDDIT_USER_AGENT=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/REDDIT_USER_AGENT --with-decryption --query Parameter.Value --output text)",
-            "REDDIT_USERNAME=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/REDDIT_USERNAME --with-decryption --query Parameter.Value --output text)",
-            "REDDIT_PASSWORD=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/REDDIT_PASSWORD --with-decryption --query Parameter.Value --output text)",
-            "SNOWFLAKE_USER=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SNOWFLAKE_USER --with-decryption --query Parameter.Value --output text)",
-            "SNOWFLAKE_PASSWORD=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SNOWFLAKE_PASSWORD --with-decryption --query Parameter.Value --output text)",
-            "SNOWFLAKE_ACCOUNT=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SNOWFLAKE_ACCOUNT --with-decryption --query Parameter.Value --output text)",
-            "SNOWFLAKE_PRIVATE_KEY_B64=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SNOWFLAKE_PRIVATE_KEY_B64 --with-decryption --query Parameter.Value --output text)",
-            "SNOWFLAKE_PRIVATE_KEY_B64_FULL=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SNOWFLAKE_PRIVATE_KEY_B64_FULL --with-decryption --query Parameter.Value --output text)",
-            "SNOWFLAKE_PRIVATE_KEY_PASSPHRASE=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SNOWFLAKE_PRIVATE_KEY_PASSPHRASE --with-decryption --query Parameter.Value --output text)",
-            "FRED_API_KEY=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/FRED_API_KEY --with-decryption --query Parameter.Value --output text)",
-            "SEC_API_USER_AGENT=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SEC_API_USER_AGENT --with-decryption --query Parameter.Value --output text)",
-            "KAFKA_BOOTSTRAP_SERVERS=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/KAFKA_BOOTSTRAP_SERVERS --with-decryption --query Parameter.Value --output text)",
-            "KAFKA_TOPIC=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/KAFKA_TOPIC --with-decryption --query Parameter.Value --output text)",
-            "SCHEMA_REGISTRY_URL=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SCHEMA_REGISTRY_URL --with-decryption --query Parameter.Value --output text)",
-            "METABASE_PRIVATE_KEY=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/METABASE_PRIVATE_KEY --with-decryption --query Parameter.Value --output text)",
-            "METABASE_USERNAME=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/METABASE_USERNAME --with-decryption --query Parameter.Value --output text)",
-            "METABASE_PASSWORD=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/METABASE_PASSWORD --with-decryption --query Parameter.Value --output text)",            
-            "chmod 600 .env"
-            ]}'
-      
-      - name: Create virtual environment and install dependencies
-        run: |
-          echo "Creating virtual environment and installing dependencies"
-          aws ssm send-command \
-              --region $AWS_REGION \
-              --instance-ids "$INSTANCE_ID" \
-              --document-name "AWS-RunShellScript" \
-              --comment "Create virtual environment and install dependencies" \
-              --parameters '{ "commands": [
-              "sudo apt update",
-              "sudo apt install ca-certificates curl",
-              "sudo install -m 0755 -d /etc/apt/keyrings",
-              "sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc",
-              "sudo chmod a+r /etc/apt/keyrings/docker.asc",
-              "sudo tee /etc/apt/sources.list.d/docker.list <<< \"Types: deb\nURIs: https://download.docker.com/linux/ubuntu\nSuites: $(. /etc/os-release && echo \\\"${UBUNTU_CODENAME:-$VERSION_CODENAME}\\\")\nComponents: stable\nSigned-By: /etc/apt/keyrings/docker.asc\"",
-              "sudo apt update",
-              "sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin",
-              "sudo systemctl enable docker",
-              "sudo systemctl start docker",
-              "cd Investment-Analytics-Data-Warehouse",
-              "sudo apt install -y python3-venv python3-pip",
-              "if [ ! -d venv ]; then python3 -m venv venv; fi",
-              "source venv/bin/activate",
-              "if [ -f requirements.txt ]; then pip install -r requirements.txt; fi"
-              ] }'
-      
-      - name: Initialise Airflow and create AWS and Snowflake connections
-        run: |
-          echo "Initialise Airflow and create AWS and Snowflake connections"
           aws ssm send-command \
             --region "$AWS_REGION" \
             --instance-ids "$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
-            --comment "Initialise Airflow Docker containers and connections" \
-            --parameters "$(cat <<'EOF'
-            {
-            "commands": [
-            "docker compose run --rm airflow-init",
-            "docker compose up postgres redis airflow-apiserver airflow-scheduler airflow-dag-processor airflow-worker airflow-triggerer -d",
-            "sleep 120",
-            "docker exec investment-analytics-data-warehouse-airflow-scheduler-1 airflow connections add snowflake_default --conn-type snowflake --conn-login \"$SNOWFLAKE_USER\" --conn-password \"$SNOWFLAKE_PASSWORD\" --conn-account \"$SNOWFLAKE_ACCOUNT\" --conn-extra '{\"database\":\"INVESTMENT_ANALYTICS\",\"warehouse\":\"INVESTMENT_ANALYTICS_DWH\",\"role\":\"$SNOWFLAKE_ROLE\"}'",
-            "docker exec investment-analytics-data-warehouse-airflow-scheduler-1 airflow connections add aws_default --conn-type aws --conn-login \"$AWS_ACCESS_KEY_ID\" --conn-password \"$AWS_SECRET_ACCESS_KEY\""
-          ]
-          }
-          EOF
-          )"
-      
-      - name: Setup Kafka Containers
-        run: |
-          echo "Setup Kafka containers"
-          aws ssm send-command \
-          --region "$AWS_REGION" \
-          --instance-ids "$INSTANCE_ID" \
-          --document-name "AWS-RunShellScript" \
-          --comment "Setup Kafka containers" \
-          --parameters '{
-          "commands": [
-          "docker compose up -d zookeeper-1 zookeeper-2 zookeeper-3 kafka-1 kafka-2 kafka-3 schema-registry kafka-connect",
-          "docker exec investment-analytics-data-warehouse-kafka-1 kafka-topics --bootstrap-server kafka-1:9092 --create --topic stock_aggregates_raw --partitions 1 --replication-factor 3",
-          "cd streaming && curl -X POST -H \"Content-Type: application/json\" --data @connector.json http://localhost:8083/connectors"
-          ]
-          }'
-      
-      - name: Metabase login
-        run: |
-          echo "Login to Metabase"
-          aws ssm send-command \
-          --region "$AWS_REGION" \
-          --instance-ids "$INSTANCE_ID" \
-          --document-name "AWS-RunShellScript" \
-          --comment "Metabase login" \
-          --parameters "{
-          \"commands\": [
-          \"curl -X POST -H \\\"Content-Type: application/json\\\" \
-          -d '{\\\"username\\\": \\\"$METABASE_USERNAME\\\", \\\"password\\\": \\\"$METABASE_PASSWORD\\\"}' \
-          http://localhost:3000/api/session\"
-          ]
-          }"
+            --comment "Full deployment" \
+            --parameters '{
+              "commands": [
+                "set -e",
+                "cd ~",
+                "if [ -d Investment-Analytics-Data-Warehouse/.git ]; then \
+                    cd Investment-Analytics-Data-Warehouse && git fetch origin && git checkout dev && git pull origin dev; \
+                else \
+                    git clone --branch dev https://github.com/jacobpalinski/Investment-Analytics-Data-Warehouse.git && \
+                    cd Investment-Analytics-Data-Warehouse; \
+                fi",
+                "chmod +x deploy.sh",
+                "./deploy.sh"
+              ]
+            }'
+
 
 
 
