@@ -1,6 +1,6 @@
 # Set variables
-DOMAIN="your-domain.com"
-EMAIL="admin@your-domain.com"
+# DOMAIN="your-domain.com"
+# EMAIL="admin@your-domain.com"
 
 # Install Docker dependencies
 sudo apt update
@@ -21,6 +21,8 @@ Components: stable
 Signed-By: /etc/apt/keyrings/docker.asc
 EOF
 
+sudo apt update
+
 # Install Docker Packages
 sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
@@ -28,61 +30,61 @@ sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin dock
 sudo apt install python3 python3-pip git
 
 # Intall nginx and certbot packages
-sudo apt install nginx certbot python3-certbot-nginx
+#sudo apt install nginx certbot python3-certbot-nginx
 
 # Enable and start Nginx
-systemctl enable nginx
-systemctl start nginx
+#systemctl enable nginx
+#systemctl start nginx
 
-cat > /etc/nginx/sites-available/default <<EOL
-server {
-    listen 80 default_server;
-    listen [::]:80 default_server;
+#cat > /etc/nginx/sites-available/default <<EOL
+#server {
+    #listen 80 default_server;
+    #listen [::]:80 default_server;
 
-    server_name $DOMAIN www.$DOMAIN;
+    #server_name $DOMAIN www.$DOMAIN;
 
     # Redirect all HTTP requests to HTTPS
-    return 301 https://\$host\$request_uri;
-}
+    #return 301 https://\$host\$request_uri;
+#}
 
-server {
-    listen 443 ssl;
-    server_name $DOMAIN www.$DOMAIN;
+#server {
+    #listen 443 ssl;
+    #server_name $DOMAIN www.$DOMAIN;
 
-    ssl_certificate /etc/letsencrypt/live/$DOMAIN/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/$DOMAIN/privkey.pem;
+    #ssl_certificate /etc/letsencrypt/live/$DOMAIN/fullchain.pem;
+    #ssl_certificate_key /etc/letsencrypt/live/$DOMAIN/privkey.pem;
 
     # Reverse proxy to Airflow
-    location /airflow/ {
-        proxy_pass http://localhost:8080/;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-    }
+    #location /airflow/ {
+        #proxy_pass http://localhost:8080/;
+        #proxy_set_header Host \$host;
+        #proxy_set_header X-Real-IP \$remote_addr;
+        #proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        #proxy_set_header X-Forwarded-Proto \$scheme;
+    #}
 
     # Reverse proxy to Metabase
-    location /metabase/ {
-        proxy_pass http://localhost:3000/;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-    }
-}
-EOL
+    #location /metabase/ {
+        #proxy_pass http://localhost:3000/;
+        #proxy_set_header Host \$host;
+        #proxy_set_header X-Real-IP \$remote_addr;
+        #proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        #proxy_set_header X-Forwarded-Proto \$scheme;
+    #}
+#}
+#EOL
 
 # Test nginx config and reload
-sudo nginx -t && systemctl reload nginx
+#sudo nginx -t && systemctl reload nginx
 
 # Obtain SSL certificate
-sudo certbot --nginx -d $DOMAIN -d www.$DOMAIN --non-interactive --agree-tos -m $EMAIL
+#sudo certbot --nginx -d $DOMAIN -d www.$DOMAIN --non-interactive --agree-tos -m $EMAIL
 
 # Enable automatic renewal
-systemctl enable certbot.timer
-systemctl start certbot.timer
+#systemctl enable certbot.timer
+#systemctl start certbot.timer
 
 # Final reload
-systemctl reload nginx
+#systemctl reload nginx
 
 echo "Setup complete! Nginx running with HTTPS and reverse proxy for Airflow/Metabase."
