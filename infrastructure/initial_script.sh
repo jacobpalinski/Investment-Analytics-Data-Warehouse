@@ -1,8 +1,8 @@
+#!/bin/bash
 # Set variables
 # DOMAIN="your-domain.com"
 # EMAIL="admin@your-domain.com"
 
-#!/bin/bash
 set -euxo pipefail
 
 exec > >(tee /var/log/user-data.log | logger -t user-data) 2>&1
