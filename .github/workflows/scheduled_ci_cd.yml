@@ -128,58 +128,58 @@ jobs:
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
       
-      #- name: Set up Docker Buildx
-        #uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
       
-      #- name: Install Docker Compose
-        #run: sudo apt-get update && sudo apt-get install -y docker-compose
+      - name: Install Docker Compose
+        run: sudo apt-get update && sudo apt-get install -y docker-compose
       
-      #- name: Start services with docker-compose
-        #working-directory: ./airflow/dags/tests
-        #run: docker-compose -f docker-compose-integration.yml up -d
+      - name: Start services with docker-compose
+        working-directory: ./airflow/dags/tests
+        run: docker-compose -f docker-compose-integration.yml up -d
       
-      #- name: Wait for services
-        #run: |
-          #echo "Waiting for containers..."
-          #sleep 90
-          #docker ps
+      - name: Wait for services
+        run: |
+          echo "Waiting for containers..."
+          sleep 90
+          docker ps
       
-      #- name: Create kafka topic for testing
-        #working-directory: ./airflow/dags/tests
-        #run: docker exec tests_kafka-1_1 kafka-topics --bootstrap-server kafka-1:9092 --create --topic stock_aggregates_tst --partitions 1 --replication-factor 1
+      - name: Create kafka topic for testing
+        working-directory: ./airflow/dags/tests
+        run: docker exec tests_kafka-1_1 kafka-topics --bootstrap-server kafka-1:9092 --create --topic stock_aggregates_tst --partitions 1 --replication-factor 1
       
-      #- name: Create kafka Snowflake connection for testing
-        #working-directory: ./airflow/dags/tests
-        #run: |
-          #curl -X POST -H 'Content-Type: application/json' --data @connector.json http://localhost:8083/connectors
+      - name: Create kafka Snowflake connection for testing
+        working-directory: ./airflow/dags/tests
+        run: |
+          curl -X POST -H 'Content-Type: application/json' --data @connector.json http://localhost:8083/connectors
       
-      #- name: Run tests
-        #working-directory: .
-        #run: pytest airflow/dags/tests -vv
+      - name: Run tests
+        working-directory: .
+        run: pytest airflow/dags/tests -vv
       
-      #- name: Stop integration services
-        #working-directory: ./airflow/dags/tests
-        #run: docker-compose -f docker-compose-integration.yml down
+      - name: Stop integration services
+        working-directory: ./airflow/dags/tests
+        run: docker-compose -f docker-compose-integration.yml down
       
-      #- name: Get EC2 instance ID
-        #run: |
-          #INSTANCE_ID=$(terraform output -raw ssm_instance_id)
-          #echo "INSTANCE_ID=$INSTANCE_ID" >> $GITHUB_ENV
+      - name: Get EC2 instance ID
+        run: |
+          INSTANCE_ID=$(terraform output -raw ssm_instance_id)
+          echo "INSTANCE_ID=$INSTANCE_ID" >> $GITHUB_ENV
       
-      #- name: Deploy to EC2 via SSM
-        #run: |
-          #aws ssm send-command \
-            #--region "$AWS_REGION" \
-            #--instance-ids "$INSTANCE_ID" \
-            #--document-name "AWS-RunShellScript" \
-            #--comment "Full deployment" \
-            #--parameters '{
-              #"commands": [
-                #"if [ -d Investment-Analytics-Data-Warehouse/.git ]; then cd Investment-Analytics-Data-Warehouse && git fetch origin && git checkout dev && git pull origin dev; else git clone --branch dev https://github.com/jacobpalinski/Investment-Analytics-Data-Warehouse.git; cd Investment-Analytics-Data-Warehouse; fi",
-                #"chmod +x deploy.sh",
-                #"./deploy.sh"
-              #]
-            #}'
+      - name: Deploy to EC2 via SSM
+        run: |
+          aws ssm send-command \
+            --region "$AWS_REGION" \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --comment "Full deployment" \
+            --parameters '{
+              "commands": [
+                "if [ -d Investment-Analytics-Data-Warehouse/.git ]; then cd Investment-Analytics-Data-Warehouse && git fetch origin && git checkout dev && git pull origin dev; else git clone --branch dev https://github.com/jacobpalinski/Investment-Analytics-Data-Warehouse.git; cd Investment-Analytics-Data-Warehouse; fi",
+                "chmod +x deploy.sh",
+                "./deploy.sh"
+              ]
+            }'
 
 
 
