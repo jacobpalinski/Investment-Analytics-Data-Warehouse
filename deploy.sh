@@ -57,15 +57,6 @@ EOF
 #sudo systemctl enable docker
 #sudo systemctl start docker
 
-if [ ! -d venv ]; then
-  python3 -m venv venv
-fi
-
-source venv/bin/activate
-
-# Install python dependencies
-python3 -m pip install -r requirements.txt
-
 # Run Airflow docker containers
 sudo docker compose run --rm airflow-init
 sudo docker compose up -d postgres redis airflow-apiserver airflow-scheduler airflow-dag-processor airflow-worker airflow-triggerer

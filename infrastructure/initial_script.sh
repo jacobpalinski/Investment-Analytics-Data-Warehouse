@@ -30,18 +30,18 @@ sudo apt update
 # Install Docker Packages
 sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-# Install deadsnakes PPA to allow Python version specification
-sudo apt install software-properties-common
-sudo add-apt-repository ppa:deadsnakes/ppa
-sudo apt update
+# Install Python3 and git
+sudo apt install -y python3 git
 
-# Install Python3, pip and git
-sudo apt install -y python3.11 python3-pip python3.11-venv git
-
-sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 2
-sudo update-alternatives --set python3 /usr/bin/python3.11
-
-curl -sS https://bootstrap.pypa.io/get-pip.py | sudo python3.11
+# Install AWS CLI v2
+if ! command -v aws >/dev/null 2>&1; then
+  echo "Installing AWS CLI..."
+  sudo apt update
+  sudo apt install -y unzip curl
+  curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+  unzip awscliv2.zip
+  sudo ./aws/install
+fi
 
 # Intall nginx and certbot packages
 #sudo apt install nginx certbot python3-certbot-nginx
