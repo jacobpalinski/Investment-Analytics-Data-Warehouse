@@ -20,16 +20,22 @@ NEWS_API_KEY=$(aws ssm get-parameter --name /investment_analytics_data_warehouse
 SNOWFLAKE_USER=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SNOWFLAKE_USER --with-decryption --query Parameter.Value --output text)
 SNOWFLAKE_PASSWORD=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SNOWFLAKE_PASSWORD --with-decryption --query Parameter.Value --output text)
 SNOWFLAKE_ACCOUNT=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SNOWFLAKE_ACCOUNT --with-decryption --query Parameter.Value --output text)
-SNOWFLAKE_PRIVATE_KEY_B64=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SNOWFLAKE_PRIVATE_KEY_B64 --with-decryption --query Parameter.Value --output text)
-SNOWFLAKE_PRIVATE_KEY_B64_FULL=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SNOWFLAKE_PRIVATE_KEY_B64_FULL --with-decryption --query Parameter.Value --output text)
 SNOWFLAKE_PRIVATE_KEY_PASSPHRASE=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SNOWFLAKE_PRIVATE_KEY_PASSPHRASE --with-decryption --query Parameter.Value --output text)
 KAFKA_BOOTSTRAP_SERVERS=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/KAFKA_BOOTSTRAP_SERVERS --with-decryption --query Parameter.Value --output text)
 KAFKA_TOPIC=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/KAFKA_TOPIC --with-decryption --query Parameter.Value --output text)
 SCHEMA_REGISTRY_URL=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SCHEMA_REGISTRY_URL --with-decryption --query Parameter.Value --output text)
 METABASE_USERNAME=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/METABASE_USERNAME --with-decryption --query Parameter.Value --output text)
 METABASE_PASSWORD=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/METABASE_PASSWORD --with-decryption --query Parameter.Value --output text)
-METABASE_PRIVATE_KEY=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/METABASE_PRIVATE_KEY --with-decryption --query Parameter.Value --output text)
 EOF
+
+# Export base64 encoded environment variables
+export SNOWFLAKE_PRIVATE_KEY_B64=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SNOWFLAKE_PRIVATE_KEY_B64 --with-decryption --query Parameter.Value --output text)
+export SNOWFLAKE_PRIVATE_KEY_B64_FULL=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SNOWFLAKE_PRIVATE_KEY_B64_FULL --with-decryption --query Parameter.Value --output text)
+export METABASE_PRIVATE_KEY=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/METABASE_PRIVATE_KEY --with-decryption --query Parameter.Value --output text)
+
+# Create Metabase private key file
+echo "$METABASE_PRIVATE_KEY" > private_key_metabase.p8
+chmod 600 private_key_metabase.p8
 
 # Create docker path
 # export PATH=$PATH:/usr/bin
@@ -69,9 +75,9 @@ sudo docker exec investment-analytics-data-warehouse-airflow-scheduler-1 \
   airflow connections add snowflake_default \
   --conn-type snowflake \
   --conn-login "$SNOWFLAKE_USER" \
-  --conn-password "$SNOWFLAKE_PASSWORD" \
+  --conn-password "$SNOWFLAKE_PRIVATE_KEY_PASSPHRASE" \
   --conn-account "$SNOWFLAKE_ACCOUNT" \
-  --conn-extra "{\"database\":\"INVESTMENT_ANALYTICS\",\"warehouse\":\"INVESTMENT_ANALYTICS_DWH\",\"role\":\"$SNOWFLAKE_ROLE\"}"
+  --conn-extra "{\"database\":\"INVESTMENT_ANALYTICS\",\"warehouse\":\"INVESTMENT_ANALYTICS_DWH\",\"role\":\"$SNOWFLAKE_ROLE\", private_key_content: \"$SNOWFLAKE_PRIVATE_KEY_B64_FULL\"}"
 
 # Create AWS connection in Airflow
 sudo docker exec investment-analytics-data-warehouse-airflow-scheduler-1 \
@@ -93,6 +99,9 @@ curl -X POST -H "Content-Type: application/json" --data @connector.json http://l
 # Login to Metabase
 curl -f -X POST -H "Content-Type: application/json" -d "{\"username\":\"$METABASE_USERNAME\",\"password\":\"$METABASE_PASSWORD\"}" http://localhost:3000/api/session
 
-echo "Airflow and Kafka services have been started successfully."
+# Launch metabase container
+sudo docker compose up -d metabase
+
+echo "Airflow, Kafka and Metabase services have been started successfully."
 
 

@@ -55,15 +55,17 @@ x-airflow-common:
     dockerfile: airflow.dockerfile
   environment:
     &airflow-common-env
-    AIRFLOW__CORE__EXECUTOR: LocalExecutor #CeleryExecutor
+    AIRFLOW__CORE__EXECUTOR: CeleryExecutor
     AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
-    #AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
-    #AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
-    #AIRFLOW__CORE__FERNET_KEY: ''
+    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
+    AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
+    AIRFLOW__CORE__FERNET_KEY: ''
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__CORE__EXECUTION_API_SERVER_URL: 'http://airflow-apiserver:8080/execution/'
+    SNOWFLAKE_PRIVATE_KEY_B64: ${SNOWFLAKE_PRIVATE_KEY_B64}
+    SNOWFLAKE_PRIVATE_KEY_B64_FULL: ${SNOWFLAKE_PRIVATE_KEY_B64_FULL}
     # yamllint disable rule:line-length
     # Use simple http server on scheduler for health checks
     # See https://airflow.apache.org/docs/apache-airflow/stable/administration-and-deployment/logging-monitoring/check-health.html#scheduler-health-check-server
@@ -79,13 +81,11 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/airflow/logs:/opt/airflow/logs
     - ${AIRFLOW_PROJ_DIR:-.}/airflow/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/airflow/plugins:/opt/airflow/plugins
-    - ./.env:/opt/airflow/.env
-    - ./private_key_encrypted.pem:/opt/airflow/config/private_key_encrypted.pem
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on
-    #redis:
-      #condition: service_healthy
+    redis:
+      condition: service_healthy
     postgres:
       condition: service_healthy
 
@@ -166,45 +166,45 @@ services:
       airflow-init:
         condition: service_completed_successfully
 
-  #airflow-worker:
-    #<<: *airflow-common
-    #command: celery worker
-    #healthcheck:
+  airflow-worker:
+    <<: *airflow-common
+    command: celery worker
+    healthcheck:
       # yamllint disable rule:line-length
-      #test:
-        #- "CMD-SHELL"
-        #- 'celery --app airflow.providers.celery.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}" || celery --app airflow.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"'
-      #interval: 30s
-      #timeout: 10s
-      #retries: 5
-      #start_period: 30s
-    #environment:
-      #<<: *airflow-common-env
+      test:
+        - "CMD-SHELL"
+        - 'celery --app airflow.providers.celery.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}" || celery --app airflow.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"'
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    environment:
+      <<: *airflow-common-env
       # Required to handle warm shutdown of the celery workers properly
       # See https://airflow.apache.org/docs/docker-stack/entrypoint.html#signal-propagation
-      #DUMB_INIT_SETSID: "0"
-    #restart: always
-    #depends_on:
-      #<<: *airflow-common-depends-on
-      #airflow-apiserver:
-        #condition: service_healthy
-      #airflow-init:
-        #condition: service_completed_successfully
+      DUMB_INIT_SETSID: "0"
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-apiserver:
+        condition: service_healthy
+      airflow-init:
+        condition: service_completed_successfully
 
-  #airflow-triggerer:
-    #<<: *airflow-common
-    #command: triggerer
-    #healthcheck:
-      #test: ["CMD-SHELL", 'airflow jobs check --job-type TriggererJob --hostname "$${HOSTNAME}"']
-      #interval: 30s
-      #timeout: 10s
-      #retries: 5
-      #start_period: 30s
-    #restart: always
-    #depends_on:
-      #<<: *airflow-common-depends-on
-      #airflow-init:
-        #condition: service_completed_successfully
+  airflow-triggerer:
+    <<: *airflow-common
+    command: triggerer
+    healthcheck:
+      test: ["CMD-SHELL", 'airflow jobs check --job-type TriggererJob --hostname "$${HOSTNAME}"']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
 
   airflow-init:
     <<: *airflow-common
@@ -298,42 +298,43 @@ services:
       _PIP_ADDITIONAL_REQUIREMENTS: ''
     user: "0:0"
 
-  airflow-cli:
-    <<: *airflow-common
-    profiles:
-      - debug
-    environment:
-      <<: *airflow-common-env
-      CONNECTION_CHECK_MAX_COUNT: "0"
+  # For development use only
+  #airflow-cli:
+    #<<: *airflow-common
+    #profiles:
+      #- debug
+    #environment:
+      #<<: *airflow-common-env
+      #CONNECTION_CHECK_MAX_COUNT: "0"
     # Workaround for entrypoint issue. See: https://github.com/apache/airflow/issues/16252
-    command:
-      - bash
-      - -c
-      - airflow
-    depends_on:
-      <<: *airflow-common-depends-on
+    #command:
+      #- bash
+      #- -c
+      #- airflow
+    #depends_on:
+      #<<: *airflow-common-depends-on
 
   # You can enable flower by adding "--profile flower" option e.g. docker-compose --profile flower up
   # or by explicitly targeted on the command line e.g. docker-compose up flower.
   # See: https://docs.docker.com/compose/profiles/
-  #flower:
-    #<<: *airflow-common
-    #command: celery flower
-    #profiles:
-      #- flower
-    #ports:
-      #- "5555:5555"
-    #healthcheck:
-      #test: ["CMD", "curl", "--fail", "http://localhost:5555/"]
-      #interval: 30s
-      #timeout: 10s
-      #retries: 5
-      #start_period: 30s
-    #restart: always
-    #depends_on:
-      #<<: *airflow-common-depends-on
-      #airflow-init:
-        #condition: service_completed_successfully
+  flower:
+    <<: *airflow-common
+    command: celery flower
+    profiles:
+      - flower
+    ports:
+      - "5555:5555"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:5555/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
 
   zookeeper-1:
     image: confluentinc/cp-zookeeper:7.3.3
@@ -345,27 +346,27 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
       ZOOKER_INIT_LIMIT: 10
       ZOOKEEPER_SYNC_LIMIT: 5
-      #ZOOKEEPER_SERVERS: zookeeper-1:2888:3888;zookeeper-2:2888:3888;zookeeper-3:2888:3888
+      ZOOKEEPER_SERVERS: zookeeper-1:2888:3888;zookeeper-2:2888:3888;zookeeper-3:2888:3888
   
-  #zookeeper-2:
-    #image: confluentinc/cp-zookeeper:7.3.3
-    #environment:
-      #ZOOKEEPER_SERVER_ID: 2
-      #ZOOKEEPER_CLIENT_PORT: 2181
-      #ZOOKEEPER_TICK_TIME: 2000
-      #ZOOKER_INIT_LIMIT: 10
-      #ZOOKEEPER_SYNC_LIMIT: 5
-      #ZOOKEEPER_SERVERS: zookeeper-1:2888:3888;zookeeper-2:2888:3888;zookeeper-3:2888:3888
+  zookeeper-2:
+    image: confluentinc/cp-zookeeper:7.3.3
+    environment:
+      ZOOKEEPER_SERVER_ID: 2
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKER_INIT_LIMIT: 10
+      ZOOKEEPER_SYNC_LIMIT: 5
+      ZOOKEEPER_SERVERS: zookeeper-1:2888:3888;zookeeper-2:2888:3888;zookeeper-3:2888:3888
   
-  #zookeeper-3:
-    #image: confluentinc/cp-zookeeper:7.3.3
-    #environment:
-      #ZOOKEEPER_SERVER_ID: 3
-      #ZOOKEEPER_CLIENT_PORT: 2181
-      #ZOOKEEPER_TICK_TIME: 2000
-      #ZOOKER_INIT_LIMIT: 10
-      #ZOOKEEPER_SYNC_LIMIT: 5
-      #ZOOKEEPER_SERVERS: zookeeper-1:2888:3888;zookeeper-2:2888:3888;zookeeper-3:2888:3888
+  zookeeper-3:
+    image: confluentinc/cp-zookeeper:7.3.3
+    environment:
+      ZOOKEEPER_SERVER_ID: 3
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKER_INIT_LIMIT: 10
+      ZOOKEEPER_SYNC_LIMIT: 5
+      ZOOKEEPER_SERVERS: zookeeper-1:2888:3888;zookeeper-2:2888:3888;zookeeper-3:2888:3888
   
   kafka-1:
     image: confluentinc/cp-kafka:7.3.3
@@ -373,20 +374,62 @@ services:
       - "8097:8097"
     environment:
       KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181 #,zookeeper-2:2181,zookeeper-3:2181
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: EXTERNAL:PLAINTEXT,INTERNAL:PLAINTEXT
       KAFKA_ADVERTISED_LISTENERS: EXTERNAL://localhost:8097,INTERNAL://kafka-1:9092
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1 #3
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1 #3
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1 #2
-      KAFKA_MIN_INSYNC_REPLICAS: 1 #2
-      KAFKA_NUM_PARTITIONS: 1 #3
-      KAFKA_DEFAULT_REPLICATION_FACTOR: 1 #3
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_MIN_INSYNC_REPLICAS: 2
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
     depends_on:
       - zookeeper-1
-      #- zookeeper-2
-      #- zookeeper-3
+      - zookeeper-2
+      - zookeeper-3
+  
+  kafka-2:
+    image: confluentinc/cp-kafka:7.3.3
+    ports:
+      - "8098:8098"
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: EXTERNAL:PLAINTEXT,INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: EXTERNAL://localhost:8098,INTERNAL://kafka-2:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_MIN_INSYNC_REPLICAS: 2
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+    depends_on:
+      - zookeeper-1
+      - zookeeper-2
+      - zookeeper-3
+  
+  kafka-3:
+    image: confluentinc/cp-kafka:7.3.3
+    ports:
+      - "8099:8099"
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: EXTERNAL:PLAINTEXT,INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: EXTERNAL://localhost:8099,INTERNAL://kafka-3:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_MIN_INSYNC_REPLICAS: 2
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+    depends_on:
+      - zookeeper-1
+      - zookeeper-2
+      - zookeeper-3
   
   schema-registry:
     image: confluentinc/cp-schema-registry:7.3.3
@@ -394,26 +437,28 @@ services:
       - "8081:8081"
     environment:
       SCHEMA_REGISTRY_HOST_NAME: schema-registry
-      # SCHEMA_REGISTRY_BOOTSTRAP_SERVERS: kafka-1:9092 #,kafka-2:9092, kafka-3:9092
+      SCHEMA_REGISTRY_BOOTSTRAP_SERVERS: kafka-1:9092,kafka-2:9092,kafka-3:9092 # kafka-1:9092 only for development
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka-1:9092
       SCHEMA_REGISTRY_LISTENERS: "http://0.0.0.0:8081"
     depends_on:
-      - kafka-1
+      - kafka-1 # Only one that is required for development
+      - kafka-2
+      - kafka-3
   
   kafka-connect:
     image: confluentinc/cp-kafka-connect:7.3.3
     ports:
       - "8083:8083"
     environment:
-      CONNECT_BOOTSTRAP_SERVERS: kafka-1:9092 #,kafka-2:9092, kafka-3:9092
+      CONNECT_BOOTSTRAP_SERVERS: kafka-1:9092,kafka-2:9092,kafka-3:9092
       CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect
       CONNECT_GROUP_ID: compose-connect-group
       CONNECT_CONFIG_STORAGE_TOPIC: docker-connect-configs
       CONNECT_OFFSET_STORAGE_TOPIC: docker-connect-offsets
       CONNECT_STATUS_STORAGE_TOPIC: docker-connect-status
-      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1 #3
-      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1 #3
-      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1 #3
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 3
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 3
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 3
       CONNECT_KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
       CONNECT_VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
       CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
@@ -422,48 +467,6 @@ services:
       - bash
       - -c
       - "confluent-hub install --no-prompt snowflakeinc/snowflake-kafka-connector:1.9.4 && /etc/confluent/docker/run"
-  
-  #kafka-2:
-    #image: confluentinc/cp-kafka:7.3.3
-    #ports:
-      #- "8098:8098"
-    #environment:
-      #KAFKA_BROKER_ID: 2
-      #KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181
-      #KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: EXTERNAL:PLAINTEXT,INTERNAL:PLAINTEXT
-      #KAFKA_ADVERTISED_LISTENERS: EXTERNAL://localhost:8098,INTERNAL://kafka-2:9092
-      #KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
-      #KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
-      #KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
-      #KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
-      #KAFKA_MIN_INSYNC_REPLICAS: 2
-      #KAFKA_NUM_PARTITIONS: 3
-      #KAFKA_DEFAULT_REPLICATION_FACTOR: 3
-    #depends_on:
-      #- zookeeper-1
-      #- zookeeper-2
-      #- zookeeper-3
-  
-  #kafka-3:
-    #image: confluentinc/cp-kafka:7.3.3
-    #ports:
-      #- "8099:8099"
-    #environment:
-      #KAFKA_BROKER_ID: 3
-      #KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181
-      #KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: EXTERNAL:PLAINTEXT,INTERNAL:PLAINTEXT
-      #KAFKA_ADVERTISED_LISTENERS: EXTERNAL://localhost:8099,INTERNAL://kafka-3:9092
-      #KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
-      #KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
-      #KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
-      #KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
-      #KAFKA_MIN_INSYNC_REPLICAS: 2
-      #KAFKA_NUM_PARTITIONS: 3
-      #KAFKA_DEFAULT_REPLICATION_FACTOR: 3
-    #depends_on:
-      #- zookeeper-1
-      #- zookeeper-2
-      #- zookeeper-3
   
   metabase:
     image: metabase/metabase:latest
