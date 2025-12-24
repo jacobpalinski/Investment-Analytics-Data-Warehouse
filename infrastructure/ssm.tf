@@ -11,7 +11,7 @@ resource "aws_ssm_parameter" "ssm_params" {
     S3_TST_BUCKET = var.aws_s3_tst_bucket
     AIRFLOW_UID = var.airflow_uid
     _AIRFLOW_WWW_USER_USERNAME = var.airflow_username
-    _AIRLOW_WWW_USER_PASSWORD = var.airflow_password
+    _AIRFLOW_WWW_USER_PASSWORD = var.airflow_password
     POLYGON_API_KEY = var.polygon_api_key
     FINNHUB_API_KEY = var.finnhub_api_key
     NEWS_API_KEY = var.news_api_key
