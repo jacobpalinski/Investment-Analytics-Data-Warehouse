@@ -30,8 +30,13 @@ sudo apt update
 # Install Docker Packages
 sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
+# Install deadsnakes PPA to allow Python version specification
+sudo apt install software-properties-common
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt update
+
 # Install Python3, pip and git
-sudo apt install -y python3 python3-pip git
+sudo apt install -y python3.11 python3-pip python3.11-venv git
 
 # Intall nginx and certbot packages
 #sudo apt install nginx certbot python3-certbot-nginx
