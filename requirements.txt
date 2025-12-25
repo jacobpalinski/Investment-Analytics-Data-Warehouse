@@ -185,7 +185,6 @@ rich==13.9.4
 rich-argparse==1.7.1
 rich-toolkit==0.14.7
 rpds-py==0.25.1
-s3transfer==0.13.0
 safetensors==0.5.3
 sagemaker_studio==1.0.15
 scipy==1.15.3
