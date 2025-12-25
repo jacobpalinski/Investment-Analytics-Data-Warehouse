@@ -134,6 +134,12 @@ associate_public_ip_address = true
 # Initial Setup Script
 user_data = file("./initial_script.sh")
 
+root_block_device {
+volume_size = 80
+volume_type = "gp3"     
+delete_on_termination = true
+}
+
 tags = {
   Name = "investment-analytics-data-warehouse-ec2-host"
 }
