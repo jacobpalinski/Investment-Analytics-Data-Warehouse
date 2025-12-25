@@ -28,6 +28,9 @@ METABASE_USERNAME=$(aws ssm get-parameter --name /investment_analytics_data_ware
 METABASE_PASSWORD=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/METABASE_PASSWORD --with-decryption --query Parameter.Value --output text)
 EOF
 
+# Load environment variables from .env file
+source .env
+
 # Export base64 encoded environment variables
 export SNOWFLAKE_PRIVATE_KEY_B64=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SNOWFLAKE_PRIVATE_KEY_B64 --with-decryption --query Parameter.Value --output text)
 export SNOWFLAKE_PRIVATE_KEY_B64_FULL=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SNOWFLAKE_PRIVATE_KEY_B64_FULL --with-decryption --query Parameter.Value --output text)
@@ -77,7 +80,7 @@ sudo docker exec investment-analytics-data-warehouse-airflow-scheduler-1 \
   --conn-login "$SNOWFLAKE_USER" \
   --conn-password "$SNOWFLAKE_PRIVATE_KEY_PASSPHRASE" \
   --conn-account "$SNOWFLAKE_ACCOUNT" \
-  --conn-extra "{\"database\":\"INVESTMENT_ANALYTICS\",\"warehouse\":\"INVESTMENT_ANALYTICS_DWH\",\"role\":\"$SNOWFLAKE_ROLE\", private_key_content: \"$SNOWFLAKE_PRIVATE_KEY_B64_FULL\"}"
+  --conn-extra "{\"database\":\"INVESTMENT_ANALYTICS\",\"warehouse\":\"INVESTMENT_ANALYTICS_DWH\", \"private_key_content\":\"$SNOWFLAKE_PRIVATE_KEY_B64_FULL\"}"
 
 # Create AWS connection in Airflow
 sudo docker exec investment-analytics-data-warehouse-airflow-scheduler-1 \
