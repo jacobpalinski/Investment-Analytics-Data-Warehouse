@@ -79,7 +79,7 @@ sudo docker exec investment-analytics-data-warehouse-airflow-scheduler-1 \
   --conn-type snowflake \
   --conn-login "$SNOWFLAKE_USER" \
   --conn-password "$SNOWFLAKE_PRIVATE_KEY_PASSPHRASE" \
-  --conn-extra "{\"database\":\"INVESTMENT_ANALYTICS\",\"warehouse\":\"INVESTMENT_ANALYTICS_DWH\", \"private_key_content\":\"$SNOWFLAKE_PRIVATE_KEY_B64_FULL\"}"
+  --conn-extra "{\"database\":\"INVESTMENT_ANALYTICS\",\"warehouse\":\"INVESTMENT_ANALYTICS_DWH\", \"private_key_content\":\"$SNOWFLAKE_PRIVATE_KEY_B64\"}"
 
 # Create AWS connection in Airflow
 sudo docker exec investment-analytics-data-warehouse-airflow-scheduler-1 \
