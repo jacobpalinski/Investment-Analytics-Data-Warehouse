@@ -64,7 +64,6 @@ jobs:
       FRED_API_KEY: ${{secrets.FRED_API_KEY}}
       SEC_API_USER_AGENT: ${{secrets.SEC_API_USER_AGENT}}
       SNOWFLAKE_PRIVATE_KEY_B64: ${{secrets.SNOWFLAKE_PRIVATE_KEY_B64}}
-      SNOWFLAKE_PRIVATE_KEY_B64_FULL: ${{secrets.SNOWFLAKE_PRIVATE_KEY_B64_FULL}}
       SNOWFLAKE_PRIVATE_KEY_PASSPHRASE: ${{secrets.SNOWFLAKE_PRIVATE_KEY_PASSPHRASE}}
       KAFKA_BOOTSTRAP_SERVERS_TST: ${{secrets.KAFKA_BOOTSTRAP_SERVERS_TST}}
       KAFKA_TOPIC_TST: ${{secrets.KAFKA_TOPIC_TST}}
@@ -94,7 +93,6 @@ jobs:
       TF_VAR_fred_api_key: ${{secrets.FRED_API_KEY}}
       TF_VAR_sec_api_user_agent: ${{secrets.SEC_API_USER_AGENT}}
       TF_VAR_snowflake_private_key_b64: ${{secrets.SNOWFLAKE_PRIVATE_KEY_B64}}
-      TF_VAR_snowflake_private_key_b64_full: ${{secrets.SNOWFLAKE_PRIVATE_KEY_B64_FULL}}
       TF_VAR_snowflake_private_key_passphrase: ${{secrets.SNOWFLAKE_PRIVATE_KEY_PASSPHRASE}}
       TF_VAR_kafka_bootstrap_servers: ${{secrets.KAFKA_BOOTSTRAP_SERVERS}}
       TF_VAR_kafka_topic: ${{secrets.KAFKA_TOPIC}}
@@ -175,6 +173,9 @@ jobs:
             --instance-ids "$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
             --comment "Full deployment" \
+            --timeout-seconds 3600 \
+            --max-concurrency "1" \
+            --max-errors "0" \
             --parameters '{
               "commands": [
                 "if [ -d Investment-Analytics-Data-Warehouse/.git ]; then cd Investment-Analytics-Data-Warehouse && git fetch origin && git checkout dev && git pull origin dev; else git clone --branch dev https://github.com/jacobpalinski/Investment-Analytics-Data-Warehouse.git; cd Investment-Analytics-Data-Warehouse; fi",

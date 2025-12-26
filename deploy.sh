@@ -33,7 +33,6 @@ source .env
 
 # Export base64 encoded environment variables
 export SNOWFLAKE_PRIVATE_KEY_B64=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SNOWFLAKE_PRIVATE_KEY_B64 --with-decryption --query Parameter.Value --output text)
-export SNOWFLAKE_PRIVATE_KEY_B64_FULL=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SNOWFLAKE_PRIVATE_KEY_B64_FULL --with-decryption --query Parameter.Value --output text)
 export METABASE_PRIVATE_KEY=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/METABASE_PRIVATE_KEY --with-decryption --query Parameter.Value --output text)
 
 # Create Metabase private key file
@@ -92,7 +91,7 @@ sudo docker exec investment-analytics-data-warehouse-airflow-scheduler-1 \
 sudo docker compose up -d zookeeper-1 zookeeper-2 zookeeper-3 kafka-1 kafka-2 kafka-3 schema-registry kafka-connect
 
 # Create Kafka topic
-sudo docker exec investment-analytics-data-warehouse-kafka-1 kafka-topics --bootstrap-server kafka-1:9092 --create --topic stock_aggregates_raw --partitions 1 --replication-factor 3
+sudo docker exec investment-analytics-data-warehouse-kafka-1-1 kafka-topics --bootstrap-server kafka-1:9092 --create --topic stock_aggregates_raw --partitions 1 --replication-factor 3
 
 # Create Kafka Snowflake connector
 cd streaming

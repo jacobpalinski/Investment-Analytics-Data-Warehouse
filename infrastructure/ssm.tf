@@ -25,7 +25,6 @@ resource "aws_ssm_parameter" "ssm_params" {
     SNOWFLAKE_ACCOUNT = var.snowflake_account
     SNOWFLAKE_ROLE = var.snowflake_role
     SNOWFLAKE_PRIVATE_KEY_B64 = var.snowflake_private_key_b64
-    SNOWFLAKE_PRIVATE_KEY_B64_FULL = var.snowflake_private_key_b64_full
     SNOWFLAKE_PRIVATE_KEY_PASSPHRASE = var.snowflake_private_key_passphrase
     FRED_API_KEY = var.fred_api_key
     SEC_API_USER_AGENT = var.sec_api_user_agent

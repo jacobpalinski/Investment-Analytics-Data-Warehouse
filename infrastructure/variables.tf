@@ -125,12 +125,6 @@ variable "snowflake_private_key_b64" {
   sensitive = true
 }
 
-# Declare snowflake_private_key_b64_full variable
-variable "snowflake_private_key_b64_full" {
-  type = string
-  sensitive = true
-}
-
 # Declare snowflake_private_key_passphrase variable
 variable "snowflake_private_key_passphrase" {
   type = string
@@ -184,7 +178,6 @@ variable "metabase_password" {
   type = string
   sensitive = true
 }
-
 
 # Declare instance_type variable
 variable "instance_type" {
