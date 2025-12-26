@@ -183,7 +183,7 @@ variable "metabase_password" {
 variable "instance_type" {
   description = "EC2 instance type"
   type        = string
-  default     = "m7i.large"
+  default     = "t3.2xlarge"
 }
 
 
