@@ -109,7 +109,7 @@ curl -X POST -H "Content-Type: application/json" --data @connector.json http://l
 sudo docker compose up -d metabase
 
 # Wait until Metabase is up and running
-sleep 60
+sleep 180
 
 # Login to Metabase
 curl -f -X POST -H "Content-Type: application/json" -d "{\"username\":\"$METABASE_USERNAME\",\"password\":\"$METABASE_PASSWORD\"}" http://localhost:3000/api/session
