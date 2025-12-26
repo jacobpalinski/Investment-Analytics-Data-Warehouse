@@ -27,15 +27,13 @@ KAFKA_TOPIC=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/
 SCHEMA_REGISTRY_URL=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SCHEMA_REGISTRY_URL --with-decryption --query Parameter.Value --output text)
 METABASE_USERNAME=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/METABASE_USERNAME --with-decryption --query Parameter.Value --output text)
 METABASE_PASSWORD=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/METABASE_PASSWORD --with-decryption --query Parameter.Value --output text)
-METABASE_PRIVATE_KEY=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/METABASE_PRIVATE_KEY --with-decryption --query Parameter.Value --output text)
 EOF
 
 # Load environment variables from .env file
 source .env
 
 # Export base64 encoded environment variables
-# export SNOWFLAKE_PRIVATE_KEY_B64=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SNOWFLAKE_PRIVATE_KEY_B64 --with-decryption --query Parameter.Value --output text)
-# export METABASE_PRIVATE_KEY=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/METABASE_PRIVATE_KEY --with-decryption --query Parameter.Value --output text)
+export METABASE_PRIVATE_KEY=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/METABASE_PRIVATE_KEY --with-decryption --query Parameter.Value --output text)
 
 # Create Metabase private key file
 echo "$METABASE_PRIVATE_KEY" > private_key_metabase.p8
