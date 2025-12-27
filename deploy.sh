@@ -114,7 +114,7 @@ sudo docker compose up -d metabase
 sleep 180
 
 # Create metabase database in postgres container
-sudo docker exec investment-analytics-data-warehouse-postgres-1 psql -U ${POSTGRES_USERNAME} -c "CREATE DATABASE metabase;"
+sudo docker exec investment-analytics-data-warehouse-postgres-1 psql -U ${POSTGRES_USERNAME} -d airflow -c "CREATE DATABASE metabase;"
 
 # Login to Metabase
 curl -f -X POST -H "Content-Type: application/json" -d "{\"username\":\"$METABASE_USERNAME\",\"password\":\"$METABASE_PASSWORD\"}" http://localhost:3000/api/session
