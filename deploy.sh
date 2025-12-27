@@ -107,14 +107,14 @@ sudo docker exec investment-analytics-data-warehouse-kafka-1-1 kafka-topics --bo
 cd streaming
 curl -X POST -H "Content-Type: application/json" --data @connector.json http://localhost:8083/connectors
 
+# Create metabase database in postgres container
+sudo docker exec investment-analytics-data-warehouse-postgres-1 psql -U ${POSTGRES_USERNAME} -d airflow -c "CREATE DATABASE metabase;"
+
 # Launch metabase container
 sudo docker compose up -d metabase
 
 # Wait until Metabase is up and running
-sleep 300
-
-# Create metabase database in postgres container
-sudo docker exec investment-analytics-data-warehouse-postgres-1 psql -U ${POSTGRES_USERNAME} -d airflow -c "CREATE DATABASE metabase;"
+sleep 600
 
 # Login to Metabase
 curl -f -X POST -H "Content-Type: application/json" -d "{\"username\":\"$METABASE_USERNAME\",\"password\":\"$METABASE_PASSWORD\"}" http://localhost:3000/api/session
