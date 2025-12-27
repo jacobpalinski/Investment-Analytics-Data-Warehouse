@@ -111,7 +111,7 @@ curl -X POST -H "Content-Type: application/json" --data @connector.json http://l
 sudo docker compose up -d metabase
 
 # Wait until Metabase is up and running
-sleep 180
+sleep 300
 
 # Create metabase database in postgres container
 sudo docker exec investment-analytics-data-warehouse-postgres-1 psql -U ${POSTGRES_USERNAME} -d airflow -c "CREATE DATABASE metabase;"
