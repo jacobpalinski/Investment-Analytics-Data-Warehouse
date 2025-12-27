@@ -71,6 +71,8 @@ jobs:
       METABASE_PRIVATE_KEY: ${{secrets.METABASE_PRIVATE_KEY}}
       METABASE_USERNAME: ${{secrets.METABASE_USERNAME}}
       METABASE_PASSWORD: ${{secrets.METABASE_PASSWORD}}
+      POSTGRES_USERNAME: ${{secrets.POSTGRES_USERNAME}}
+      POSTGRES_PASSWORD: ${{secrets.POSTGRES_PASSWORD}}
       TF_VAR_aws_access_key_id: ${{secrets.AWS_ACCESS_KEY_ID}}
       TF_VAR_aws_secret_access_key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
       TF_VAR_aws_s3_bucket: ${{secrets.AWS_S3_BUCKET}}
@@ -100,6 +102,8 @@ jobs:
       TF_VAR_metabase_private_key: ${{secrets.METABASE_PRIVATE_KEY}}
       TF_VAR_metabase_username: ${{secrets.METABASE_USERNAME}}
       TF_VAR_metabase_password: ${{secrets.METABASE_PASSWORD}}
+      TF_VAR_postgres_username: ${{secrets.POSTGRES_USERNAME}}
+      TF_VAR_postgres_password: ${{secrets.POSTGRES_PASSWORD}}
 
     steps:
       - name: Checkout repository

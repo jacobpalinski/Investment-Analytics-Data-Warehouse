@@ -179,6 +179,18 @@ variable "metabase_password" {
   sensitive = true
 }
 
+# Declare postgres_username variable
+variable "postgres_username" {
+  type = string
+  sensitive = true
+}
+
+# Declare postgres_password variable
+variable "postgres_password" {
+  type = string
+  sensitive = true
+}
+
 # Declare instance_type variable
 variable "instance_type" {
   description = "EC2 instance type"

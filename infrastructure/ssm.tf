@@ -34,6 +34,8 @@ resource "aws_ssm_parameter" "ssm_params" {
     METABASE_PRIVATE_KEY = var.metabase_private_key
     METABASE_USERNAME = var.metabase_username
     METABASE_PASSWORD = var.metabase_password
+    POSTGRES_USERNAME = var.postgres_username
+    POSTGRES_PASSWORD = var.postgres_password
   }
 
   name = "${local.ssm_prefix}${each.key}"

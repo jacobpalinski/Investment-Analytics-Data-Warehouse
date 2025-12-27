@@ -27,6 +27,8 @@ KAFKA_TOPIC=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/
 SCHEMA_REGISTRY_URL=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SCHEMA_REGISTRY_URL --with-decryption --query Parameter.Value --output text)
 METABASE_USERNAME=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/METABASE_USERNAME --with-decryption --query Parameter.Value --output text)
 METABASE_PASSWORD=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/METABASE_PASSWORD --with-decryption --query Parameter.Value --output text)
+POSTGRES_USERNAME=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/POSTGRES_USERNAME --with-decryption --query Parameter.Value --output text)
+POSTGRES_PASSWORD=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/POSTGRES_PASSWORD --with-decryption --query Parameter.Value --output text)
 EOF
 
 # Load environment variables from .env file
@@ -110,6 +112,9 @@ sudo docker compose up -d metabase
 
 # Wait until Metabase is up and running
 sleep 180
+
+# Create metabase database in postgres container
+sudo docker exec investment-analytics-data-warehouse-postgres-1 psql -U ${POSTGRES_USERNAME} -c "CREATE DATABASE metabase;"
 
 # Login to Metabase
 curl -f -X POST -H "Content-Type: application/json" -d "{\"username\":\"$METABASE_USERNAME\",\"password\":\"$METABASE_PASSWORD\"}" http://localhost:3000/api/session
