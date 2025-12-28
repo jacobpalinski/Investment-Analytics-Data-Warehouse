@@ -14,6 +14,7 @@ AWS_S3_TST_BUCKET=$(aws ssm get-parameter --name /investment_analytics_data_ware
 AIRFLOW_UID=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/AIRFLOW_UID --with-decryption --query Parameter.Value --output text)
 _AIRFLOW_WWW_USER_USERNAME=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/_AIRFLOW_WWW_USER_USERNAME --with-decryption --query Parameter.Value --output text)
 _AIRFLOW_WWW_USER_PASSWORD=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/_AIRFLOW_WWW_USER_PASSWORD --with-decryption --query Parameter.Value --output text)
+AIRFLOW_FERNET_KEY=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/AIRFLOW_FERNET_KEY --with-decryption --query Parameter.Value --output text)
 POLYGON_API_KEY=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/POLYGON_API_KEY --with-decryption --query Parameter.Value --output text)
 FINNHUB_API_KEY=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/FINNHUB_API_KEY --with-decryption --query Parameter.Value --output text)
 NEWS_API_KEY=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/NEWS_API_KEY --with-decryption --query Parameter.Value --output text)
@@ -35,11 +36,11 @@ EOF
 source .env
 
 # Export base64 encoded environment variables
-export METABASE_PRIVATE_KEY=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/METABASE_PRIVATE_KEY --with-decryption --query Parameter.Value --output text)
+#export METABASE_PRIVATE_KEY=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/METABASE_PRIVATE_KEY --with-decryption --query Parameter.Value --output text)
 
 # Create Metabase private key file
-echo "$METABASE_PRIVATE_KEY" > private_key_metabase.p8
-chmod 600 private_key_metabase.p8
+#echo "$METABASE_PRIVATE_KEY" > private_key_metabase.p8
+#chmod 600 private_key_metabase.p8
 
 # Create docker path
 # export PATH=$PATH:/usr/bin
@@ -74,10 +75,10 @@ sudo docker compose up -d postgres redis airflow-apiserver airflow-scheduler air
 # Wait until containers are up and running
 sleep 180
 
-sudo docker exec investment-analytics-data-warehouse-airflow-scheduler-1 \
-  airflow users reset-password \
-  --username ${_AIRFLOW_WWW_USER_USERNAME:-airflow} \
-  --password ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
+#sudo docker exec investment-analytics-data-warehouse-airflow-scheduler-1 \
+  #airflow users reset-password \
+  #--username ${_AIRFLOW_WWW_USER_USERNAME:-airflow} \
+  #--password ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
 
 # Create Snowflake connection in Airflow
 sudo docker exec investment-analytics-data-warehouse-airflow-scheduler-1 \
@@ -95,29 +96,29 @@ sudo docker exec investment-analytics-data-warehouse-airflow-scheduler-1 \
   --conn-password "$AWS_SECRET_ACCESS_KEY"
 
 # Run Kafka docker containers
-sudo docker compose up -d zookeeper-1 zookeeper-2 zookeeper-3 kafka-1 kafka-2 kafka-3 schema-registry kafka-connect
+#sudo docker compose up -d zookeeper-1 zookeeper-2 zookeeper-3 kafka-1 kafka-2 kafka-3 schema-registry kafka-connect
 
 # Wait until containers are up and running
-sleep 180
+#sleep 180
 
 # Create Kafka topic
-sudo docker exec investment-analytics-data-warehouse-kafka-1-1 kafka-topics --bootstrap-server kafka-1:9092 --create --topic stock_aggregates_raw --partitions 1 --replication-factor 3
+#sudo docker exec investment-analytics-data-warehouse-kafka-1-1 kafka-topics --bootstrap-server kafka-1:9092 --create --topic stock_aggregates_raw --partitions 1 --replication-factor 3
 
 # Create Kafka Snowflake connector
-cd streaming
-curl -X POST -H "Content-Type: application/json" --data @connector.json http://localhost:8083/connectors
+#cd streaming
+#curl -X POST -H "Content-Type: application/json" --data @connector.json http://localhost:8083/connectors
 
 # Create metabase database in postgres container
-sudo docker exec investment-analytics-data-warehouse-postgres-1 psql -U ${POSTGRES_USERNAME} -d airflow -c "CREATE DATABASE metabase;"
+#sudo docker exec investment-analytics-data-warehouse-postgres-1 psql -U ${POSTGRES_USERNAME} -d airflow -c "CREATE DATABASE metabase;"
 
 # Launch metabase container
-sudo docker compose up -d metabase
+#sudo docker compose up -d metabase
 
-echo "Waiting for Metabase to become ready..."
-until curl -sf http://localhost:3000/api/health | grep -q '"status":"ok"'; do
-  sleep 5
-done
-echo "Metabase is ready"
+#echo "Waiting for Metabase to become ready..."
+#until curl -sf http://localhost:3000/api/health | grep -q '"status":"ok"'; do
+  #sleep 5
+#done
+#echo "Metabase is ready"
 
 # Create token for Metabase setup
 # SETUP_JSON=$(curl -sf http://localhost:3000/api/setup)
@@ -138,6 +139,6 @@ echo "Metabase is ready"
   #}"
 
 # Print completion message
-echo "Airflow, Kafka and Metabase services have been started successfully."
+#echo "Airflow, Kafka and Metabase services have been started successfully."
 
 
