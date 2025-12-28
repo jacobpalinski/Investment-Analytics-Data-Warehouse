@@ -69,7 +69,7 @@ jobs:
       KAFKA_TOPIC_TST: ${{secrets.KAFKA_TOPIC_TST}}
       SCHEMA_REGISTRY_URL_TST: ${{secrets.SCHEMA_REGISTRY_URL_TST}}
       METABASE_PRIVATE_KEY: ${{secrets.METABASE_PRIVATE_KEY}}
-      METABASE_USERNAME: ${{secrets.METABASE_USERNAME}}
+      METABASE_EMAIL: ${{secrets.METABASE_EMAIL}}
       METABASE_PASSWORD: ${{secrets.METABASE_PASSWORD}}
       POSTGRES_USERNAME: ${{secrets.POSTGRES_USERNAME}}
       POSTGRES_PASSWORD: ${{secrets.POSTGRES_PASSWORD}}
@@ -100,7 +100,7 @@ jobs:
       TF_VAR_kafka_topic: ${{secrets.KAFKA_TOPIC}}
       TF_VAR_schema_registry_url: ${{secrets.SCHEMA_REGISTRY_URL}}
       TF_VAR_metabase_private_key: ${{secrets.METABASE_PRIVATE_KEY}}
-      TF_VAR_metabase_username: ${{secrets.METABASE_USERNAME}}
+      TF_VAR_metabase_email: ${{secrets.METABASE_EMAIL}}
       TF_VAR_metabase_password: ${{secrets.METABASE_PASSWORD}}
       TF_VAR_postgres_username: ${{secrets.POSTGRES_USERNAME}}
       TF_VAR_postgres_password: ${{secrets.POSTGRES_PASSWORD}}

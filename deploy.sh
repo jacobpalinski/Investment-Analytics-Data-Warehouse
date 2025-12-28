@@ -113,11 +113,29 @@ sudo docker exec investment-analytics-data-warehouse-postgres-1 psql -U ${POSTGR
 # Launch metabase container
 sudo docker compose up -d metabase
 
-# Wait until Metabase is up and running
-sleep 600
+echo "Waiting for Metabase to become ready..."
+until curl -sf http://localhost:3000/api/health | grep -q '"status":"ok"'; do
+  sleep 5
+done
+echo "Metabase is ready"
 
-# Login to Metabase
-curl -f -X POST -H "Content-Type: application/json" -d "{\"username\":\"$METABASE_USERNAME\",\"password\":\"$METABASE_PASSWORD\"}" http://localhost:3000/api/session
+# Create token for Metabase setup
+SETUP_JSON=$(curl -sf http://localhost:3000/api/setup)
+SETUP_TOKEN=$(echo "$SETUP_JSON" | jq -r '.token')
+
+# Create Metabase admin user
+curl -f -X POST http://localhost:3000/api/setup \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"token\": \"$SETUP_TOKEN\",
+    \"user\": {
+      \"email\": \"$METABASE_EMAIL\",
+      \"password\": \"$METABASE_PASSWORD\",
+    },
+    \"prefs\": {
+      \"site_name\": \"Investment Analytics\"
+    },
+  }"
 
 # Print completion message
 echo "Airflow, Kafka and Metabase services have been started successfully."

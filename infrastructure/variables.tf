@@ -167,8 +167,8 @@ variable "metabase_private_key" {
   sensitive = true
 }
 
-# Declare metabase_username variable
-variable "metabase_username" {
+# Declare metabase_email variable
+variable "metabase_email" {
   type = string
   sensitive = true
 }

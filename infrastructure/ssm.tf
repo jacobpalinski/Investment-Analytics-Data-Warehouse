@@ -32,7 +32,7 @@ resource "aws_ssm_parameter" "ssm_params" {
     KAFKA_TOPIC = var.kafka_topic
     SCHEMA_REGISTRY_URL = var.schema_registry_url
     METABASE_PRIVATE_KEY = var.metabase_private_key
-    METABASE_USERNAME = var.metabase_username
+    METABASE_EMAIL = var.metabase_email
     METABASE_PASSWORD = var.metabase_password
     POSTGRES_USERNAME = var.postgres_username
     POSTGRES_PASSWORD = var.postgres_password
