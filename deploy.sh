@@ -25,7 +25,7 @@ SNOWFLAKE_PRIVATE_KEY_B64=$(aws ssm get-parameter --name /investment_analytics_d
 KAFKA_BOOTSTRAP_SERVERS=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/KAFKA_BOOTSTRAP_SERVERS --with-decryption --query Parameter.Value --output text)
 KAFKA_TOPIC=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/KAFKA_TOPIC --with-decryption --query Parameter.Value --output text)
 SCHEMA_REGISTRY_URL=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SCHEMA_REGISTRY_URL --with-decryption --query Parameter.Value --output text)
-METABASE_USERNAME=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/METABASE_USERNAME --with-decryption --query Parameter.Value --output text)
+METABASE_EMAIL=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/METABASE_EMAIL --with-decryption --query Parameter.Value --output text)
 METABASE_PASSWORD=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/METABASE_PASSWORD --with-decryption --query Parameter.Value --output text)
 POSTGRES_USERNAME=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/POSTGRES_USERNAME --with-decryption --query Parameter.Value --output text)
 POSTGRES_PASSWORD=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/POSTGRES_PASSWORD --with-decryption --query Parameter.Value --output text)
@@ -120,22 +120,22 @@ done
 echo "Metabase is ready"
 
 # Create token for Metabase setup
-SETUP_JSON=$(curl -sf http://localhost:3000/api/setup)
-SETUP_TOKEN=$(echo "$SETUP_JSON" | jq -r '.token')
+# SETUP_JSON=$(curl -sf http://localhost:3000/api/setup)
+# SETUP_TOKEN=$(echo "$SETUP_JSON" | jq -r '.token')
 
 # Create Metabase admin user
-curl -f -X POST http://localhost:3000/api/setup \
-  -H "Content-Type: application/json" \
-  -d "{
-    \"token\": \"$SETUP_TOKEN\",
-    \"user\": {
-      \"email\": \"$METABASE_EMAIL\",
-      \"password\": \"$METABASE_PASSWORD\",
-    },
-    \"prefs\": {
-      \"site_name\": \"Investment Analytics\"
-    },
-  }"
+# curl -f -X POST http://localhost:3000/api/setup \
+  #-H "Content-Type: application/json" \
+  #-d "{
+    #\"token\": \"$SETUP_TOKEN\",
+    #\"user\": {
+      #\"email\": \"$METABASE_EMAIL\",
+      #\"password\": \"$METABASE_PASSWORD\",
+    #},
+    #\"prefs\": {
+      #\"site_name\": \"Investment Analytics\"
+    #},
+  #}"
 
 # Print completion message
 echo "Airflow, Kafka and Metabase services have been started successfully."
