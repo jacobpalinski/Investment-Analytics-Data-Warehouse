@@ -37,11 +37,11 @@ EOF
 source .env
 
 # Export base64 encoded environment variables
-#export METABASE_PRIVATE_KEY=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/METABASE_PRIVATE_KEY --with-decryption --query Parameter.Value --output text)
+export METABASE_PRIVATE_KEY=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/METABASE_PRIVATE_KEY --with-decryption --query Parameter.Value --output text)
 
 # Create Metabase private key file
-#echo "$METABASE_PRIVATE_KEY" > private_key_metabase.p8
-#chmod 600 private_key_metabase.p8
+echo "$METABASE_PRIVATE_KEY" > private_key_metabase.p8
+chmod 600 private_key_metabase.p8
 
 # Create docker path
 # export PATH=$PATH:/usr/bin
@@ -82,14 +82,14 @@ sleep 180
   #--password ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
 
 # Create Airflow admin user
-sudo docker exec investment-analytics-data-warehouse-airflow-apiserver-1 \
-  airflow users create \
-    --username "$AIRFLOW_USERNAME" \
-    --password "$AIRFLOW_PASSWORD" \
-    --firstname Jacob \
-    --lastname Palinski \
-    --role Admin \
-    --email ${AIRFLOW_EMAIL} || true
+#sudo docker exec investment-analytics-data-warehouse-airflow-apiserver-1 \
+  #airflow users create \
+    #--username "$AIRFLOW_USERNAME" \
+    #--password "$AIRFLOW_PASSWORD" \
+    #--firstname Jacob \
+    #--lastname Palinski \
+    #--role Admin \
+    #--email ${AIRFLOW_EMAIL} || true
 
 # Create Snowflake connection in Airflow
 sudo docker exec investment-analytics-data-warehouse-airflow-scheduler-1 \
@@ -120,10 +120,13 @@ sudo docker exec investment-analytics-data-warehouse-airflow-scheduler-1 \
 #curl -X POST -H "Content-Type: application/json" --data @connector.json http://localhost:8083/connectors
 
 # Create metabase database in postgres container
-#sudo docker exec investment-analytics-data-warehouse-postgres-1 psql -U ${POSTGRES_USERNAME} -d airflow -c "CREATE DATABASE metabase;"
+sudo docker exec investment-analytics-data-warehouse-postgres-1 psql -U ${POSTGRES_USERNAME} -c "CREATE DATABASE metabase;"
+
+# Restore metabase database from local dump file
+sudo docker exec -i investment-analytics-data-warehouse-postgres-1 psql -U ${POSTGRES_USERNAME} -d metabase < metabase_dump.sql
 
 # Launch metabase container
-#sudo docker compose up -d metabase
+sudo docker compose up -d metabase
 
 #echo "Waiting for Metabase to become ready..."
 #until curl -sf http://localhost:3000/api/health | grep -q '"status":"ok"'; do
