@@ -120,7 +120,7 @@ sudo docker exec investment-analytics-data-warehouse-airflow-scheduler-1 \
 #curl -X POST -H "Content-Type: application/json" --data @connector.json http://localhost:8083/connectors
 
 # Create metabase database in postgres container
-sudo docker exec investment-analytics-data-warehouse-postgres-1 psql -U ${POSTGRES_USERNAME} -c "CREATE DATABASE metabase;"
+sudo docker exec investment-analytics-data-warehouse-postgres-1 psql -U ${POSTGRES_USERNAME} -d airflow -c "CREATE DATABASE metabase;"
 
 # Restore metabase database from local dump file
 sudo docker exec -i investment-analytics-data-warehouse-postgres-1 psql -U ${POSTGRES_USERNAME} -d metabase < metabase_dump.sql
