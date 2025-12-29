@@ -15,6 +15,7 @@ AIRFLOW_UID=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/
 _AIRFLOW_WWW_USER_USERNAME=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/_AIRFLOW_WWW_USER_USERNAME --with-decryption --query Parameter.Value --output text)
 _AIRFLOW_WWW_USER_PASSWORD=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/_AIRFLOW_WWW_USER_PASSWORD --with-decryption --query Parameter.Value --output text)
 AIRFLOW_FERNET_KEY=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/AIRFLOW_FERNET_KEY --with-decryption --query Parameter.Value --output text)
+AIRFLOW_EMAIL=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/AIRFLOW_EMAIL --with-decryption --query Parameter.Value --output text)
 POLYGON_API_KEY=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/POLYGON_API_KEY --with-decryption --query Parameter.Value --output text)
 FINNHUB_API_KEY=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/FINNHUB_API_KEY --with-decryption --query Parameter.Value --output text)
 NEWS_API_KEY=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/NEWS_API_KEY --with-decryption --query Parameter.Value --output text)
@@ -79,6 +80,16 @@ sleep 180
   #airflow users reset-password \
   #--username ${_AIRFLOW_WWW_USER_USERNAME:-airflow} \
   #--password ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
+
+# Create Airflow admin user
+sudo docker exec investment-analytics-data-warehouse-airflow-apiserver-1 \
+  airflow users create \
+    --username "$AIRFLOW_ADMIN_USERNAME" \
+    --password "$AIRFLOW_ADMIN_PASSWORD" \
+    --firstname Jacob \
+    --lastname Palinski \
+    --role Admin \
+    --email ${AIRFLOW_EMAIL} || true
 
 # Create Snowflake connection in Airflow
 sudo docker exec investment-analytics-data-warehouse-airflow-scheduler-1 \

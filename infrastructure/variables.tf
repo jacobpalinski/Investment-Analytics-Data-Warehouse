@@ -41,14 +41,20 @@ variable "airflow_username" {
   sensitive = true
 }
 
-# Declare airflow_password variable
+# Declare airflow_fernet_key variable
 variable "airflow_fernet_key" {
   type = string
   sensitive = true
 }
 
-# Declare airflow_fernet_key variable
+# Declare airflow_password variable
 variable "airflow_password" {
+  type = string
+  sensitive = true
+}
+
+# Declare airflow_email variable
+variable "airflow_email" {
   type = string
   sensitive = true
 }
