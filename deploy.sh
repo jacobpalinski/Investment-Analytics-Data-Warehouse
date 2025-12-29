@@ -12,8 +12,8 @@ AWS_SECRET_ACCESS_KEY=$(aws ssm get-parameter --name /investment_analytics_data_
 AWS_S3_BUCKET=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/S3_BUCKET --with-decryption --query Parameter.Value --output text)
 AWS_S3_TST_BUCKET=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/S3_TST_BUCKET --with-decryption --query Parameter.Value --output text)
 AIRFLOW_UID=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/AIRFLOW_UID --with-decryption --query Parameter.Value --output text)
-_AIRFLOW_WWW_USER_USERNAME=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/_AIRFLOW_WWW_USER_USERNAME --with-decryption --query Parameter.Value --output text)
-_AIRFLOW_WWW_USER_PASSWORD=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/_AIRFLOW_WWW_USER_PASSWORD --with-decryption --query Parameter.Value --output text)
+AIRFLOW_USERNAME=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/AIRFLOW_USERNAME --with-decryption --query Parameter.Value --output text)
+AIRFLOW_PASSWORD=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/AIRFLOW_PASSWORD --with-decryption --query Parameter.Value --output text)
 AIRFLOW_FERNET_KEY=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/AIRFLOW_FERNET_KEY --with-decryption --query Parameter.Value --output text)
 AIRFLOW_EMAIL=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/AIRFLOW_EMAIL --with-decryption --query Parameter.Value --output text)
 POLYGON_API_KEY=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/POLYGON_API_KEY --with-decryption --query Parameter.Value --output text)
@@ -84,8 +84,8 @@ sleep 180
 # Create Airflow admin user
 sudo docker exec investment-analytics-data-warehouse-airflow-apiserver-1 \
   airflow users create \
-    --username "$AIRFLOW_ADMIN_USERNAME" \
-    --password "$AIRFLOW_ADMIN_PASSWORD" \
+    --username "$AIRFLOW_USERNAME" \
+    --password "$AIRFLOW_PASSWORD" \
     --firstname Jacob \
     --lastname Palinski \
     --role Admin \
