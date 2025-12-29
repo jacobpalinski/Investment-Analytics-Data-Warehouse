@@ -142,11 +142,10 @@ jobs:
         #working-directory: ./airflow/dags/tests
         #run: docker-compose -f docker-compose-integration.yml up -d
       
-      #- name: Wait for services
-        #run: |
-          #echo "Waiting for containers..."
-          #sleep 90
-          #docker ps
+      - name: Wait for services
+        run: |
+          echo "Waiting for containers..."
+          sleep 300
       
       #- name: Create kafka topic for testing
         #working-directory: ./airflow/dags/tests
