@@ -132,7 +132,10 @@ iam_instance_profile        = aws_iam_instance_profile.ec2_profile.name
 associate_public_ip_address = true
 
 # Initial Setup Script
-user_data = file("./initial_script.sh")
+user_data = templatefile("./initial_script.sh", {
+  domain_name    = var.domain_name
+  certbot_email  = var.certbot_email
+})
 
 root_block_device {
 volume_size = 80

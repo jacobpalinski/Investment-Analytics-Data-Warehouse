@@ -4,8 +4,8 @@ set -euo pipefail
 exec > >(tee /var/log/user-data.log | logger -t user-data) 2>&1
 
 # Set variables
-DOMAIN_NAME="${DOMAIN_NAME}"
-CERTBOT_EMAIL="${CERTBOT_EMAIL}"
+DOMAIN_NAME="${domain_name}"
+CERTBOT_EMAIL="${certbot_email}"
 
 # Install Docker dependencies
 sudo apt update
@@ -64,8 +64,8 @@ server {
     listen 443 ssl;
     server_name ${DOMAIN_NAME} www.${DOMAIN_NAME};
 
-    ssl_certificate /etc/letsencrypt/live/{$DOMAIN_NAME}/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/{$DOMAIN_NAME}/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem;
 
     # Reverse proxy to Metabase
     location /metabase/ {
