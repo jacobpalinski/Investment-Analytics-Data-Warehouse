@@ -75,6 +75,12 @@ sudo docker exec investment-analytics-data-warehouse-kafka-1-1 kafka-topics --bo
 cd streaming
 curl -X POST -H "Content-Type: application/json" --data @connector.json http://localhost:8083/connectors
 
+# Run Kafka stock_aggregates_stream_producer.py script
+nohup python3 stock_aggregates_stream_producer.py > stream_output.log 2>&1 & # Process can be stopped later using 'pkill -f stock_aggregates_stream_producer.py'
+
+# Go back to main directory
+cd ..
+
 # Create metabase database in postgres container
 sudo docker exec investment-analytics-data-warehouse-postgres-1 psql -U ${POSTGRES_USERNAME} -d airflow -c "CREATE DATABASE metabase;"
 
@@ -83,9 +89,6 @@ sudo docker exec -i investment-analytics-data-warehouse-postgres-1 psql -U ${POS
 
 # Launch metabase container
 sudo docker compose up -d metabase
-
-# Run Kafka stock_aggregates_stream_producer.py script
-nohup python3 stock_aggregates_stream_producer.py > stream_output.log 2>&1 & # Process can be stopped later using 'pkill -f stock_aggregates_stream_producer.py'
 
 # Print completion message
 echo "Airflow, Kafka and Metabase services have been started successfully."
