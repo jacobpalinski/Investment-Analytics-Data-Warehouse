@@ -37,7 +37,7 @@ resource "aws_ssm_parameter" "ssm_params" {
     POSTGRES_USERNAME = var.postgres_username
     POSTGRES_PASSWORD = var.postgres_password
     DOMAIN_NAME = var.domain_name
-    CERTBOT_EMAIL = var.cerbot_email
+    CERTBOT_EMAIL = var.certbot_email
   }
 
   name = "${local.ssm_prefix}${each.key}"
