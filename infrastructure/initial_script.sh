@@ -83,7 +83,7 @@ sudo nginx -t && systemctl reload nginx
 
 # Note: SSL setup is deferred. Once DNS is pointing to this EC2 instance, run:
 #sudo apt install -y certbot python3-certbot-nginx
-#sudo certbot --nginx -d ${DOMAIN_NAME} -d www.${DOMAIN_NAME} --non-interactive --agree-tos -m ${CERTBOT_EMAIL}
+#sudo certbot --nginx -d $DOMAIN_NAME -d www.$DOMAIN_NAME --non-interactive --agree-tos -m $CERTBOT_EMAIL
 #systemctl reload nginx
 
 # Setup complete
