@@ -1,22 +1,30 @@
 # Import necessary libraries
 import os
 from datetime import datetime, timedelta
-from utils.utils import read_sql_file
-from financials_fact_table.financials_extraction import extract_financials
-from data_quality_checks_outcomes import fail_if_data_quality_tests_failed
+from dags.utils.snowflake_utils import Snowflake
+from dags.financials_fact_table.financials_extraction import extract_financials
+from dags.data_quality_checks_outcomes import fail_if_data_quality_tests_failed
 from airflow.sdk import DAG
 from airflow.providers.standard.operators.python import PythonOperator
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
+
+# Instantiate Snowflake Client
+snowflake_client = Snowflake(
+    user=os.getenv("SNOWFLAKE_USER"),
+    account=os.getenv("SNOWFLAKE_ACCOUNT"),
+    private_key_encoded=os.getenv("SNOWFLAKE_PRIVATE_KEY_B64")
+)
 
 # Define default arguments for the DAG
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': datetime(2023, 10, 1),
+    'start_date': datetime(2025, 31, 12, 6, 0),
     'retries': 1,
     'retry_delay': timedelta(minutes=5),
     'catchup': False,
-    'email_on_failure': False,
+    'email': os.getenv("AIRFLOW_EMAIL"),
+    'email_on_failure': True,
     'email_on_retry': False,
     'email_on_success': False,
 }
@@ -39,20 +47,20 @@ DATA_QUALITY_TESTS_DIMENSION_FAIL_PATH = os.path.join(BASE_DIR, 'sql', 'data_qua
 DATA_QUALITY_FACT_FAIL_PATH = os.path.join(BASE_DIR, 'sql', 'data_quality_fact_financials_fail.sql')
 
 # Read SQL contents
-INSERT_STAGING_FINANCIALS = read_sql_file(INSERT_STAGING_FINANCIALS_PATH)
-MOST_RECENT_RECORDS = read_sql_file(MOST_RECENT_RECORDS_PATH)
-DELETE_RECORDS = read_sql_file(DELETE_RECORDS_PATH)
-DERIVE_RATIOS = read_sql_file(DERIVE_RATIOS_PATH)
-DELETE_NULL_RATIOS = read_sql_file(DELETE_NULL_RATIOS_PATH)
-POPULATE_QUARTER = read_sql_file(POPULATE_QUARTER_PATH)
-INSERT_DIM_PERIOD = read_sql_file(INSERT_DIM_PERIOD_PATH)
-INSERT_FACT_FINANCIALS = read_sql_file(INSERT_FACT_FINANCIALS_PATH)
-DQ_STAGING_SQL = read_sql_file(DATA_QUALITY_TESTS_STAGING_PATH)
-DQ_FACT_SQL = read_sql_file(DATA_QUALITY_TESTS_FACT_PATH)
-DQ_DIM_SQL = read_sql_file(DATA_QUALITY_TESTS_DIMENSION_PATH)
-DQ_STAGING_FAIL = read_sql_file(DATA_QUALITY_STAGING_FAIL_PATH)
-DQ_FACT_FAIL = read_sql_file(DATA_QUALITY_STAGING_FAIL_PATH)
-DQ_DIM_FAIL = read_sql_file(DATA_QUALITY_TESTS_DIMENSION_FAIL_PATH)
+INSERT_STAGING_FINANCIALS = snowflake_client.read_sql_file(INSERT_STAGING_FINANCIALS_PATH)
+MOST_RECENT_RECORDS = snowflake_client.read_sql_file(MOST_RECENT_RECORDS_PATH)
+DELETE_RECORDS = snowflake_client.read_sql_file(DELETE_RECORDS_PATH)
+DERIVE_RATIOS = snowflake_client.read_sql_file(DERIVE_RATIOS_PATH)
+DELETE_NULL_RATIOS = snowflake_client.read_sql_file(DELETE_NULL_RATIOS_PATH)
+POPULATE_QUARTER = snowflake_client.read_sql_file(POPULATE_QUARTER_PATH)
+INSERT_DIM_PERIOD = snowflake_client.read_sql_file(INSERT_DIM_PERIOD_PATH)
+INSERT_FACT_FINANCIALS = snowflake_client.read_sql_file(INSERT_FACT_FINANCIALS_PATH)
+DQ_STAGING_SQL = snowflake_client.read_sql_file(DATA_QUALITY_TESTS_STAGING_PATH)
+DQ_FACT_SQL = snowflake_client.read_sql_file(DATA_QUALITY_TESTS_FACT_PATH)
+DQ_DIM_SQL = snowflake_client.read_sql_file(DATA_QUALITY_TESTS_DIMENSION_PATH)
+DQ_STAGING_FAIL = snowflake_client.read_sql_file(DATA_QUALITY_STAGING_FAIL_PATH)
+DQ_FACT_FAIL = snowflake_client.read_sql_file(DATA_QUALITY_STAGING_FAIL_PATH)
+DQ_DIM_FAIL = snowflake_client.read_sql_file(DATA_QUALITY_TESTS_DIMENSION_FAIL_PATH)
 
 # Define the DAG
 with DAG(dag_id='financials_fact_dag',

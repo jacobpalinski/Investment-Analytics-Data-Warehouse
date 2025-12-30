@@ -14,7 +14,7 @@ on:
 
 jobs:
   #tickers_extraction:
-    #if: github.event.schedule == "0 3 1 * *"
+    #if: github.event.schedule == "0 2 1 * *"
     #environment: prd
     #runs-on: ubuntu-latest
 
@@ -35,7 +35,7 @@ jobs:
         #run: python extract_listed_tickers.py
 
   check-and-deploy:
-    #if: github.event.schedule == "0 11 * * *"
+    #if: github.event.schedule == "0 3 * * *"
     environment: prd
     runs-on: ubuntu-latest
 
@@ -69,10 +69,10 @@ jobs:
       KAFKA_TOPIC_TST: ${{secrets.KAFKA_TOPIC_TST}}
       SCHEMA_REGISTRY_URL_TST: ${{secrets.SCHEMA_REGISTRY_URL_TST}}
       METABASE_PRIVATE_KEY: ${{secrets.METABASE_PRIVATE_KEY}}
-      METABASE_EMAIL: ${{secrets.METABASE_EMAIL}}
-      METABASE_PASSWORD: ${{secrets.METABASE_PASSWORD}}
       POSTGRES_USERNAME: ${{secrets.POSTGRES_USERNAME}}
       POSTGRES_PASSWORD: ${{secrets.POSTGRES_PASSWORD}}
+      DOMAIN_NAME: ${{secrets.DOMAIN_NAME}}
+      CERTBOT_EMAIL: ${{secrets.CERTBOT_EMAIL}}
       TF_VAR_aws_access_key_id: ${{secrets.AWS_ACCESS_KEY_ID}}
       TF_VAR_aws_secret_access_key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
       TF_VAR_aws_s3_bucket: ${{secrets.AWS_S3_BUCKET}}
@@ -102,10 +102,10 @@ jobs:
       TF_VAR_kafka_topic: ${{secrets.KAFKA_TOPIC}}
       TF_VAR_schema_registry_url: ${{secrets.SCHEMA_REGISTRY_URL}}
       TF_VAR_metabase_private_key: ${{secrets.METABASE_PRIVATE_KEY}}
-      TF_VAR_metabase_email: ${{secrets.METABASE_EMAIL}}
-      TF_VAR_metabase_password: ${{secrets.METABASE_PASSWORD}}
       TF_VAR_postgres_username: ${{secrets.POSTGRES_USERNAME}}
       TF_VAR_postgres_password: ${{secrets.POSTGRES_PASSWORD}}
+      TF_VAR_domain_name: ${{secrets.DOMAIN_NAME}}
+      TF_VAR_certbot_email: ${{secrets.CERTBOT_EMAIL}}
 
     steps:
       - name: Checkout repository
@@ -138,31 +138,31 @@ jobs:
       - name: Install Docker Compose
         run: sudo apt-get update && sudo apt-get install -y docker-compose
       
-      #- name: Start services with docker-compose
-        #working-directory: ./airflow/dags/tests
-        #run: docker-compose -f docker-compose-integration.yml up -d
+      - name: Start services with docker-compose
+        working-directory: ./airflow/dags/tests
+        run: docker-compose -f docker-compose-integration.yml up -d
       
       - name: Wait for services
         run: |
           echo "Waiting for containers..."
           sleep 300
       
-      #- name: Create kafka topic for testing
-        #working-directory: ./airflow/dags/tests
-        #run: docker exec tests_kafka-1_1 kafka-topics --bootstrap-server kafka-1:9092 --create --topic stock_aggregates_tst --partitions 1 --replication-factor 1
+      - name: Create kafka topic for testing
+        working-directory: ./airflow/dags/tests
+        run: docker exec tests_kafka-1_1 kafka-topics --bootstrap-server kafka-1:9092 --create --topic stock_aggregates_tst --partitions 1 --replication-factor 1
       
-      #- name: Create kafka Snowflake connection for testing
-        #working-directory: ./airflow/dags/tests
-        #run: |
-          #curl -X POST -H 'Content-Type: application/json' --data @connector.json http://localhost:8083/connectors
+      - name: Create kafka Snowflake connection for testing
+        working-directory: ./airflow/dags/tests
+        run: |
+          curl -X POST -H 'Content-Type: application/json' --data @connector.json http://localhost:8083/connectors
       
-      #- name: Run tests
-        #working-directory: .
-        #run: pytest airflow/dags/tests -vv
+      - name: Run tests
+        working-directory: .
+        run: pytest airflow/dags/tests -vv
       
-      #- name: Stop integration services
-        #working-directory: ./airflow/dags/tests
-        #run: docker-compose -f docker-compose-integration.yml down
+      - name: Stop integration services
+        working-directory: ./airflow/dags/tests
+        run: docker-compose -f docker-compose-integration.yml down
       
       - name: Get EC2 instance ID
         run: |

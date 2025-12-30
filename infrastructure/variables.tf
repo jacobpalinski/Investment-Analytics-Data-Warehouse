@@ -179,18 +179,6 @@ variable "metabase_private_key" {
   sensitive = true
 }
 
-# Declare metabase_email variable
-variable "metabase_email" {
-  type = string
-  sensitive = true
-}
-
-# Declare metabase_password variable
-variable "metabase_password" {
-  type = string
-  sensitive = true
-}
-
 # Declare postgres_username variable
 variable "postgres_username" {
   type = string
@@ -199,6 +187,18 @@ variable "postgres_username" {
 
 # Declare postgres_password variable
 variable "postgres_password" {
+  type = string
+  sensitive = true
+}
+
+# Declare domain_name variable
+variable "domain_name" {
+  type = string
+  sensitive = true
+}
+
+# Declare certbot_email variable
+variable "certbot_email" {
   type = string
   sensitive = true
 }

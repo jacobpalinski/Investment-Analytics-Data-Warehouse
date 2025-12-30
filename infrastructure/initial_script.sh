@@ -1,11 +1,11 @@
 #!/bin/bash
-# Set variables
-# DOMAIN="your-domain.com"
-# EMAIL="admin@your-domain.com"
-
-set -euxo pipefail
+set -euo pipefail
 
 exec > >(tee /var/log/user-data.log | logger -t user-data) 2>&1
+
+# Set variables
+DOMAIN_NAME="${DOMAIN_NAME}"
+CERTBOT_EMAIL="${CERTBOT_EMAIL}"
 
 # Install Docker dependencies
 sudo apt update
@@ -44,61 +44,47 @@ if ! command -v aws >/dev/null 2>&1; then
 fi
 
 # Intall nginx and certbot packages
-#sudo apt install nginx certbot python3-certbot-nginx
+sudo apt install -y certbot python3-certbot-nginx
 
 # Enable and start Nginx
-#systemctl enable nginx
-#systemctl start nginx
+systemctl enable nginx
+systemctl start nginx
 
-#cat > /etc/nginx/sites-available/default <<EOL
-#server {
-    #listen 80 default_server;
-    #listen [::]:80 default_server;
+cat > /etc/nginx/sites-available/default <<EOL
+server {
+    listen 80;
 
-    #server_name $DOMAIN www.$DOMAIN;
+    server_name ${DOMAIN_NAME} www.${DOMAIN_NAME};
 
     # Redirect all HTTP requests to HTTPS
-    #return 301 https://\$host\$request_uri;
-#}
+    return 301 https://\$host\$request_uri;
+}
 
-#server {
-    #listen 443 ssl;
-    #server_name $DOMAIN www.$DOMAIN;
+server {
+    listen 443 ssl;
+    server_name ${DOMAIN_NAME} www.${DOMAIN_NAME};
 
-    #ssl_certificate /etc/letsencrypt/live/$DOMAIN/fullchain.pem;
-    #ssl_certificate_key /etc/letsencrypt/live/$DOMAIN/privkey.pem;
-
-    # Reverse proxy to Airflow
-    #location /airflow/ {
-        #proxy_pass http://localhost:8080/;
-        #proxy_set_header Host \$host;
-        #proxy_set_header X-Real-IP \$remote_addr;
-        #proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        #proxy_set_header X-Forwarded-Proto \$scheme;
-    #}
+    ssl_certificate /etc/letsencrypt/live/{$DOMAIN_NAME}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{$DOMAIN_NAME}/privkey.pem;
 
     # Reverse proxy to Metabase
-    #location /metabase/ {
-        #proxy_pass http://localhost:3000/;
-        #proxy_set_header Host \$host;
-        #proxy_set_header X-Real-IP \$remote_addr;
-        #proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        #proxy_set_header X-Forwarded-Proto \$scheme;
-    #}
-#}
-#EOL
+    location /metabase/ {
+        proxy_pass http://localhost:3000/;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+}
+EOL
 
 # Test nginx config and reload
-#sudo nginx -t && systemctl reload nginx
+sudo nginx -t && systemctl reload nginx
 
-# Obtain SSL certificate
-#sudo certbot --nginx -d $DOMAIN -d www.$DOMAIN --non-interactive --agree-tos -m $EMAIL
-
-# Enable automatic renewal
-#systemctl enable certbot.timer
-#systemctl start certbot.timer
-
-# Final reload
+# Note: SSL setup is deferred. Once DNS is pointing to this EC2 instance, run:
+#sudo apt install -y certbot python3-certbot-nginx
+#sudo certbot --nginx -d ${DOMAIN_NAME} -d www.${DOMAIN_NAME} --non-interactive --agree-tos -m ${CERTBOT_EMAIL}
 #systemctl reload nginx
 
-echo "Setup complete! Nginx running with HTTPS and reverse proxy for Airflow/Metabase."
+# Setup complete
+echo "Setup complete! Nginx running with HTTPS and reverse proxy for Metabase"

@@ -1,23 +1,31 @@
 # Import necessary libraries
 import os
 from datetime import datetime, timedelta
-from utils.utils import read_sql_file
-from fact_sentiments.extraction_functions import extract_company_news, extract_non_company_news, extract_reddit_submissions
-from fact_sentiments.calculate_sentiment_scores import calculate_sentiment_scores_snowflake
-from data_quality_checks_outcomes import fail_if_data_quality_tests_failed
+from dags.utils.snowflake_utils import Snowflake
+from dags.fact_sentiments.extraction_functions import extract_company_news, extract_non_company_news, extract_reddit_submissions
+from dags.fact_sentiments.calculate_sentiment_scores import calculate_sentiment_scores_snowflake
+from dags.data_quality_checks_outcomes import fail_if_data_quality_tests_failed
 from airflow.sdk import DAG
 from airflow.providers.standard.operators.python import PythonOperator
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
+
+# Instantiate Snowflake Client
+snowflake_client = Snowflake(
+    user=os.getenv("SNOWFLAKE_USER"),
+    account=os.getenv("SNOWFLAKE_ACCOUNT"),
+    private_key_encoded=os.getenv("SNOWFLAKE_PRIVATE_KEY_B64")
+)
 
 # Define default arguments for the DAG
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': datetime(2023, 10, 1),
+    'start_date': datetime(2025, 31, 12, 7, 0),
     'retries': 1,
     'retry_delay': timedelta(minutes=5),
     'catchup': False,
-    'email_on_failure': False,
+    'email': os.getenv("AIRFLOW_EMAIL"),
+    'email_on_failure': True,
     'email_on_retry': False,
     'email_on_success': False,
 }
@@ -42,28 +50,28 @@ DATA_QUALITY_DIM_SOURCE_FAIL_PATH = os.path.join(BASE_DIR, 'sql', 'data_quality_
 DATA_QUALITY_DIM_SENTIMENT_DATE_FAIL_PATH = os.path.join(BASE_DIR, 'sql', 'data_quality_dim_sentiment_date_fail.sql')
 
 # Read SQL contents
-INSERT_STAGING_COMPANY_NEWS = read_sql_file(INSERT_STAGING_COMPANY_NEWS_PATH)
-INSERT_STAGING_NON_COMPANY_NEWS = read_sql_file(INSERT_STAGING_NON_COMPANY_NEWS_PATH)
-INSERT_STAGING_REDDIT_SUBMISSIONS = read_sql_file(INSERT_STAGING_REDDIT_SUBMISSIONS_PATH)
-INSERT_STAGING_COMBINED_NO_SENTIMENT = read_sql_file(INSERT_STAGING_COMBINED_NO_SENTIMENT_PATH)
-REMOVE_NULLS_STAGING_COMBINED_NO_SENTIMENT = read_sql_file(REMOVE_NULLS_STAGING_COMBINED_NO_SENTIMENT_PATH)
-INSERT_DIM_SOURCE = read_sql_file(INSERT_DIM_SOURCE_PATH)
-INSERT_DIM_SENTIMENT_DATE = read_sql_file(INSERT_DIM_SENTIMENT_DATE_PATH)
-INSERT_FACT_SENTIMENTS = read_sql_file(INSERT_FACT_SENTIMENTS_PATH)
-DQ_STAGING_SQL = read_sql_file(DATA_QUALITY_TESTS_STAGING_PATH)
-DQ_FACT_SQL = read_sql_file(DATA_QUALITY_TESTS_FACT_PATH)
-DQ_DIM_SOURCE_SQL = read_sql_file(DATA_QUALITY_TESTS_DIM_SOURCE_PATH)
-DQ_DIM_SENTIMENT_DATE_SQL = read_sql_file(DATA_QUALITY_TESTS_DIM_SENTIMENT_DATE_PATH)
-DQ_STAGING_FAIL = read_sql_file(DATA_QUALITY_STAGING_FAIL_PATH)
-DQ_FACT_FAIL = read_sql_file(DATA_QUALITY_STAGING_FAIL_PATH)
-DQ_DIM_SOURCE_FAIL = read_sql_file(DATA_QUALITY_DIM_SOURCE_FAIL_PATH)
-DQ_DIM_SENTIMENT_DATE_FAIL = read_sql_file(DATA_QUALITY_DIM_SENTIMENT_DATE_FAIL_PATH)
+INSERT_STAGING_COMPANY_NEWS = snowflake_client.read_sql_file(INSERT_STAGING_COMPANY_NEWS_PATH)
+INSERT_STAGING_NON_COMPANY_NEWS = snowflake_client.read_sql_file(INSERT_STAGING_NON_COMPANY_NEWS_PATH)
+INSERT_STAGING_REDDIT_SUBMISSIONS = snowflake_client.read_sql_file(INSERT_STAGING_REDDIT_SUBMISSIONS_PATH)
+INSERT_STAGING_COMBINED_NO_SENTIMENT = snowflake_client.read_sql_file(INSERT_STAGING_COMBINED_NO_SENTIMENT_PATH)
+REMOVE_NULLS_STAGING_COMBINED_NO_SENTIMENT = snowflake_client.read_sql_file(REMOVE_NULLS_STAGING_COMBINED_NO_SENTIMENT_PATH)
+INSERT_DIM_SOURCE = snowflake_client.read_sql_file(INSERT_DIM_SOURCE_PATH)
+INSERT_DIM_SENTIMENT_DATE = snowflake_client.read_sql_file(INSERT_DIM_SENTIMENT_DATE_PATH)
+INSERT_FACT_SENTIMENTS = snowflake_client.read_sql_file(INSERT_FACT_SENTIMENTS_PATH)
+DQ_STAGING_SQL = snowflake_client.read_sql_file(DATA_QUALITY_TESTS_STAGING_PATH)
+DQ_FACT_SQL = snowflake_client.read_sql_file(DATA_QUALITY_TESTS_FACT_PATH)
+DQ_DIM_SOURCE_SQL = snowflake_client.read_sql_file(DATA_QUALITY_TESTS_DIM_SOURCE_PATH)
+DQ_DIM_SENTIMENT_DATE_SQL = snowflake_client.read_sql_file(DATA_QUALITY_TESTS_DIM_SENTIMENT_DATE_PATH)
+DQ_STAGING_FAIL = snowflake_client.read_sql_file(DATA_QUALITY_STAGING_FAIL_PATH)
+DQ_FACT_FAIL = snowflake_client.read_sql_file(DATA_QUALITY_FACT_FAIL_PATH)
+DQ_DIM_SOURCE_FAIL = snowflake_client.read_sql_file(DATA_QUALITY_DIM_SOURCE_FAIL_PATH)
+DQ_DIM_SENTIMENT_DATE_FAIL = snowflake_client.read_sql_file(DATA_QUALITY_DIM_SENTIMENT_DATE_FAIL_PATH)
 
 # Define the DAG
 with DAG(dag_id='fact_sentiments_dag',
     default_args=default_args,
     description='DAG to create fact_sentiments table in Snowflake',
-    schedule='@monthly',
+    schedule='@daily',
     max_active_runs=1,
     tags=['sentiments', 'fact', 'snowflake']
 ):

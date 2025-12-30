@@ -1,10 +1,7 @@
 #!/bin/bash
-set -euxo pipefail
+set -euo pipefail
 
 exec > >(tee /var/log/user-data.log | logger -t user-data) 2>&1
-
-# Create .env file with parameters from AWS SSM Parameter Store
-#cd ~/Investment-Analytics-Data-Warehouse
 
 cat <<EOF > .env
 AWS_ACCESS_KEY_ID=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/ACCESS_KEY_ID --with-decryption --query Parameter.Value --output text)
@@ -27,10 +24,10 @@ SNOWFLAKE_PRIVATE_KEY_B64=$(aws ssm get-parameter --name /investment_analytics_d
 KAFKA_BOOTSTRAP_SERVERS=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/KAFKA_BOOTSTRAP_SERVERS --with-decryption --query Parameter.Value --output text)
 KAFKA_TOPIC=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/KAFKA_TOPIC --with-decryption --query Parameter.Value --output text)
 SCHEMA_REGISTRY_URL=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SCHEMA_REGISTRY_URL --with-decryption --query Parameter.Value --output text)
-METABASE_EMAIL=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/METABASE_EMAIL --with-decryption --query Parameter.Value --output text)
-METABASE_PASSWORD=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/METABASE_PASSWORD --with-decryption --query Parameter.Value --output text)
 POSTGRES_USERNAME=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/POSTGRES_USERNAME --with-decryption --query Parameter.Value --output text)
 POSTGRES_PASSWORD=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/POSTGRES_PASSWORD --with-decryption --query Parameter.Value --output text)
+DOMAIN_NAME=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/DOMAIN_NAME --with-decryption --query Parameter.Value --output text)
+CERTBOT_EMAIL=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/CERTBOT_EMAIL --with-decryption --query Parameter.Value --output text)
 EOF
 
 # Load environment variables from .env file
@@ -43,53 +40,12 @@ export METABASE_PRIVATE_KEY=$(aws ssm get-parameter --name /investment_analytics
 echo "$METABASE_PRIVATE_KEY" > private_key_metabase.p8
 chmod 600 private_key_metabase.p8
 
-# Create docker path
-# export PATH=$PATH:/usr/bin
-
-# System dependencies installation
-# sudo apt update
-# sudo apt install -y ca-certificates curl gnupg python3-venv python3-pip
-
-# Install docker
-#if ! command -v docker >/dev/null 2>&1; then
-  #echo "Installing Docker..."
-  #sudo install -d -m 0755 /etc/apt/keyrings
-  #curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo tee /etc/apt/keyrings/docker.gpg > /dev/null
-  #sudo chmod a+r /etc/apt/keyrings/docker.gpg
-
-  #echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
-    #https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" \
-    #| sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-  #sudo apt update -y
-  #sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-#fi
-
-# Start and enable docker service
-#sudo systemctl enable docker
-#sudo systemctl start docker
-
 # Run Airflow docker containers
 sudo docker compose run --rm airflow-init
 sudo docker compose up -d postgres redis airflow-apiserver airflow-scheduler airflow-dag-processor airflow-worker airflow-triggerer
 
 # Wait until containers are up and running
 sleep 180
-
-#sudo docker exec investment-analytics-data-warehouse-airflow-scheduler-1 \
-  #airflow users reset-password \
-  #--username ${_AIRFLOW_WWW_USER_USERNAME:-airflow} \
-  #--password ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
-
-# Create Airflow admin user
-#sudo docker exec investment-analytics-data-warehouse-airflow-apiserver-1 \
-  #airflow users create \
-    #--username "$AIRFLOW_USERNAME" \
-    #--password "$AIRFLOW_PASSWORD" \
-    #--firstname Jacob \
-    #--lastname Palinski \
-    #--role Admin \
-    #--email ${AIRFLOW_EMAIL} || true
 
 # Create Snowflake connection in Airflow
 sudo docker exec investment-analytics-data-warehouse-airflow-scheduler-1 \
@@ -107,17 +63,17 @@ sudo docker exec investment-analytics-data-warehouse-airflow-scheduler-1 \
   --conn-password "$AWS_SECRET_ACCESS_KEY"
 
 # Run Kafka docker containers
-#sudo docker compose up -d zookeeper-1 zookeeper-2 zookeeper-3 kafka-1 kafka-2 kafka-3 schema-registry kafka-connect
+sudo docker compose up -d zookeeper-1 zookeeper-2 zookeeper-3 kafka-1 kafka-2 kafka-3 schema-registry kafka-connect
 
 # Wait until containers are up and running
-#sleep 180
+sleep 180
 
 # Create Kafka topic
-#sudo docker exec investment-analytics-data-warehouse-kafka-1-1 kafka-topics --bootstrap-server kafka-1:9092 --create --topic stock_aggregates_raw --partitions 1 --replication-factor 3
+sudo docker exec investment-analytics-data-warehouse-kafka-1-1 kafka-topics --bootstrap-server kafka-1:9092 --create --topic stock_aggregates_raw --partitions 1 --replication-factor 3
 
 # Create Kafka Snowflake connector
-#cd streaming
-#curl -X POST -H "Content-Type: application/json" --data @connector.json http://localhost:8083/connectors
+cd streaming
+curl -X POST -H "Content-Type: application/json" --data @connector.json http://localhost:8083/connectors
 
 # Create metabase database in postgres container
 sudo docker exec investment-analytics-data-warehouse-postgres-1 psql -U ${POSTGRES_USERNAME} -d airflow -c "CREATE DATABASE metabase;"
@@ -128,31 +84,10 @@ sudo docker exec -i investment-analytics-data-warehouse-postgres-1 psql -U ${POS
 # Launch metabase container
 sudo docker compose up -d metabase
 
-#echo "Waiting for Metabase to become ready..."
-#until curl -sf http://localhost:3000/api/health | grep -q '"status":"ok"'; do
-  #sleep 5
-#done
-#echo "Metabase is ready"
-
-# Create token for Metabase setup
-# SETUP_JSON=$(curl -sf http://localhost:3000/api/setup)
-# SETUP_TOKEN=$(echo "$SETUP_JSON" | jq -r '.token')
-
-# Create Metabase admin user
-# curl -f -X POST http://localhost:3000/api/setup \
-  #-H "Content-Type: application/json" \
-  #-d "{
-    #\"token\": \"$SETUP_TOKEN\",
-    #\"user\": {
-      #\"email\": \"$METABASE_EMAIL\",
-      #\"password\": \"$METABASE_PASSWORD\",
-    #},
-    #\"prefs\": {
-      #\"site_name\": \"Investment Analytics\"
-    #},
-  #}"
+# Run Kafka stock_aggregates_stream_producer.py script
+nohup python3 stock_aggregates_stream_producer.py > stream_output.log 2>&1 & # Process can be stopped later using 'pkill -f stock_aggregates_stream_producer.py'
 
 # Print completion message
-#echo "Airflow, Kafka and Metabase services have been started successfully."
+echo "Airflow, Kafka and Metabase services have been started successfully."
 
 

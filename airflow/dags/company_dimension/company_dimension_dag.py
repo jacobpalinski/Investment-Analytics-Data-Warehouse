@@ -1,22 +1,30 @@
 # Import necessary libraries
 import os
 from datetime import datetime, timedelta
-from utils.utils import read_sql_file
-from company_dimension.company_info_extraction import extract_company_info
-from data_quality_checks_outcomes import fail_if_data_quality_tests_failed
+from dags.utils.snowflake_utils import Snowflake
+from dags.company_dimension.company_info_extraction import extract_company_info
+from dags.data_quality_checks_outcomes import fail_if_data_quality_tests_failed
 from airflow.sdk import DAG
 from airflow.providers.standard.operators.python import PythonOperator
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
+
+# Instantiate Snowflake Client
+snowflake_client = Snowflake(
+    user=os.getenv("SNOWFLAKE_USER"),
+    account=os.getenv("SNOWFLAKE_ACCOUNT"),
+    private_key_encoded=os.getenv("SNOWFLAKE_PRIVATE_KEY_B64")
+)
 
 # Define default arguments for the DAG
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': datetime(2023, 10, 1),
+    'start_date': datetime(2025, 31, 12, 4, 0),
     'retries': 1,
     'retry_delay': timedelta(minutes=5),
     'catchup': False,
-    'email_on_failure': False,
+    'email': os.getenv("AIRFLOW_EMAIL"),
+    'email_on_failure': True,
     'email_on_retry': False,
     'email_on_success': False,
 }
@@ -32,13 +40,13 @@ DATA_QUALITY_STAGING_FAIL_PATH = os.path.join(BASE_DIR, 'sql', 'data_quality_sta
 DATA_QUALITY_DIMENSION_FAIL_PATH = os.path.join(BASE_DIR, 'sql', 'data_quality_dim_company_fail.sql')
 
 # Read SQL contents
-MERGE_SQL = read_sql_file(MERGE_SQL_PATH)
-UPDATE_DIM = read_sql_file(UPDATE_DIM_COMPANY)
-INSERT_DIM = read_sql_file(INSERT_DIM_COMPANY)
-DQ_STAGING_SQL = read_sql_file(DATA_QUALITY_TESTS_STAGING)
-DQ_DIM_SQL = read_sql_file(DATA_QUALITY_TESTS_DIMENSION)
-DQ_STAGING_FAIL = read_sql_file(DATA_QUALITY_STAGING_FAIL_PATH)
-DQ_DIM_FAIL = read_sql_file(DATA_QUALITY_DIMENSION_FAIL_PATH)
+MERGE_SQL = snowflake_client.read_sql_file(MERGE_SQL_PATH)
+UPDATE_DIM = snowflake_client.read_sql_file(UPDATE_DIM_COMPANY)
+INSERT_DIM = snowflake_client.read_sql_file(INSERT_DIM_COMPANY)
+DQ_STAGING_SQL = snowflake_client.read_sql_file(DATA_QUALITY_TESTS_STAGING)
+DQ_DIM_SQL = snowflake_client.read_sql_file(DATA_QUALITY_TESTS_DIMENSION)
+DQ_STAGING_FAIL = snowflake_client.read_sql_file(DATA_QUALITY_STAGING_FAIL_PATH)
+DQ_DIM_FAIL = snowflake_client.read_sql_file(DATA_QUALITY_DIMENSION_FAIL_PATH)
 
 # Define the DAG
 with DAG(dag_id='company_dimension_dag',

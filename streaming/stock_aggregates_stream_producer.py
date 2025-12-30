@@ -42,11 +42,6 @@ with snowflake_conn.cursor() as cursor:
             where is_current = TRUE """)
     tickers = [f"AM.{row[0]}" for row in cursor.fetchall()]
 
-# Kafka config
-KAFKA_BOOTSTRAP_SERVERS = "localhost:8097" #kafka-1:9092,kafka-2:9092,kafka-3:9093 for access inside containers otherwise use localhost:8097
-KAFKA_TOPIC = "stock_aggregates_raw"
-SCHEMA_REGISTRY_URL = "http://localhost:8081"
-
 # Avro schema definition
 avro_schema_str = """
 {
