@@ -3,6 +3,11 @@ set -euo pipefail
 
 exec > >(tee /var/log/user-data.log | logger -t user-data) 2>&1
 
+# Create virtual environment and install necessary packages for running Kafka script
+python3 -m venv venv
+source venv/bin/activate
+sudo pip install python-dotenv polygon-api-client confluent-kafka snowflake-connector-python
+
 # Create .env file with environment variables from AWS SSM Parameter Store
 cat <<EOF > .env
 AWS_ACCESS_KEY_ID=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/ACCESS_KEY_ID --with-decryption --query Parameter.Value --output text)
@@ -75,9 +80,6 @@ sudo docker exec investment-analytics-data-warehouse-kafka-1-1 kafka-topics --bo
 # Create Kafka Snowflake connector
 cd streaming
 curl -X POST -H "Content-Type: application/json" --data @connector.json http://localhost:8083/connectors
-
-# Install necessary packages for running stock_aggregates_stream_producer.py script
-sudo pip install python-dotenv polygon-api-client confluent-kafka snowflake-connector-python
 
 # Run Kafka stock_aggregates_stream_producer.py script
 nohup python3 stock_aggregates_stream_producer.py > stream_output.log 2>&1 & # Process can be stopped later using 'pkill -f stock_aggregates_stream_producer.py'

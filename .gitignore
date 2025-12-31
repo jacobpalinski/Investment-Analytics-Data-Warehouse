@@ -1,5 +1,5 @@
 .env
-venv/
+./venv/
 private_key_b64.txt
 private_key.pem
 private_key_encrypted.pem
@@ -7,3 +7,5 @@ private_key_metabase.p8
 private_key.der
 public_key.pub
 rsa_key.pem
+./infrastructure/.terraform.lock.hcl
+./infrastructure/.terraform/
