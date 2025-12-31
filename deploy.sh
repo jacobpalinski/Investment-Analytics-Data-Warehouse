@@ -6,7 +6,7 @@ exec > >(tee /var/log/user-data.log | logger -t user-data) 2>&1
 # Create virtual environment and install necessary packages for running Kafka script
 python3 -m venv venv
 source venv/bin/activate
-sudo pip install python-dotenv polygon-api-client confluent-kafka snowflake-connector-python
+pip install python-dotenv polygon-api-client confluent-kafka snowflake-connector-python
 
 # Create .env file with environment variables from AWS SSM Parameter Store
 cat <<EOF > .env
@@ -55,7 +55,7 @@ sleep 180
 
 # Create Snowflake connection in Airflow
 sudo docker exec investment-analytics-data-warehouse-airflow-scheduler-1 \
-  airflow connections add snowflake_default \
+  airflow connections add snowflake_connection \
   --conn-type snowflake \
   --conn-login "$SNOWFLAKE_USER" \
   --conn-password "$SNOWFLAKE_PRIVATE_KEY_PASSPHRASE" \
@@ -63,7 +63,7 @@ sudo docker exec investment-analytics-data-warehouse-airflow-scheduler-1 \
 
 # Create AWS connection in Airflow
 sudo docker exec investment-analytics-data-warehouse-airflow-scheduler-1 \
-  airflow connections add aws_default \
+  airflow connections add aws_connection \
   --conn-type aws \
   --conn-login "$AWS_ACCESS_KEY_ID" \
   --conn-password "$AWS_SECRET_ACCESS_KEY"

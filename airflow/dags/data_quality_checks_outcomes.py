@@ -1,8 +1,8 @@
 # Import necessary libraries
 import os
-from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from dotenv import load_dotenv
-from utils.utils import create_snowflake_connection
+from dags.utils.snowflake_utils import Snowflake
+from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 
 def fail_if_data_quality_tests_failed(sql_string:str, schema:str, table_name:str) -> ValueError:
     """    Checks if any data quality checks failed for a given set of data quality checks
@@ -11,15 +11,18 @@ def fail_if_data_quality_tests_failed(sql_string:str, schema:str, table_name:str
     # Load environment variables
     load_dotenv()
 
-    # Create snowflake connection
-    snowflake_conn = create_snowflake_connection(
+    # Instantiate Snowflake Client
+    snowflake_client = Snowflake(
         user=os.getenv("SNOWFLAKE_USER"),
-        private_key_encoded=os.getenv("SNOWFLAKE_PRIVATE_KEY_B64"),
         account=os.getenv("SNOWFLAKE_ACCOUNT"),
-        warehouse='INVESTMENT_ANALYTICS_DWH',
-        database='INVESTMENT_ANALYTICS',
-        schema=schema
+        private_key_encoded=os.getenv("SNOWFLAKE_PRIVATE_KEY_B64")
     )
+
+    # Create snowflake connection
+    snowflake_conn = snowflake_client.create_connection(
+    warehouse='INVESTMENT_ANALYTICS_DWH',
+    database='INVESTMENT_ANALYTICS',
+    schema=schema)
     
     # Execute SQL to check data quality results
     hook = SnowflakeHook(snowflake_conn_id='snowflake_connection')
