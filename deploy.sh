@@ -3,6 +3,10 @@ set -euo pipefail
 
 exec > >(tee /var/log/user-data.log | logger -t user-data) 2>&1
 
+# Install requirments.txt packages
+sudo pip install -r requirements.txt
+
+# Create .env file with environment variables from AWS SSM Parameter Store
 cat <<EOF > .env
 AWS_ACCESS_KEY_ID=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/ACCESS_KEY_ID --with-decryption --query Parameter.Value --output text)
 AWS_SECRET_ACCESS_KEY=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SECRET --with-decryption --query Parameter.Value --output text)
@@ -82,7 +86,7 @@ nohup python3 stock_aggregates_stream_producer.py > stream_output.log 2>&1 & # P
 cd ..
 
 # Create metabase database in postgres container
-sudo docker exec investment-analytics-data-warehouse-postgres-1 psql -U ${POSTGRES_USERNAME} -d airflow -c "CREATE DATABASE metabase;"
+sudo docker exec investment-analytics-data-warehouse-postgres-1 psql -U ${POSTGRES_USERNAME} -d postgres -c "CREATE DATABASE metabase;"
 
 # Restore metabase database from local dump file
 sudo docker exec -i investment-analytics-data-warehouse-postgres-1 psql -U ${POSTGRES_USERNAME} -d metabase < metabase_dump.sql
