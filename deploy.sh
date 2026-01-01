@@ -3,23 +3,17 @@ set -euo pipefail
 
 exec > >(tee /var/log/deploy.log | logger -t deploy) 2>&1
 
-# Create ssm-user if it doesn't exist
-if ! id ssm-user &>/dev/null; then
-  useradd -m ssm-user
-fi
-
-# Set owner and permissions to SSM user
+# Move Investment-Analytics-Data-Warehouse code from SSM Agent directory to /opt directory
 sudo mkdir -p /opt/investment-analytics
 sudo rsync -a \
   /var/snap/amazon-ssm-agent/11797/Investment-Analytics-Data-Warehouse/ \
   /opt/investment-analytics/Investment-Analytics-Data-Warehouse/
-sudo chown -R ssm-user:ssm-user /opt/investment-analytics
 cd /opt/investment-analytics/Investment-Analytics-Data-Warehouse
 
 # Create virtual environment and install necessary packages for running Kafka script
-sudo -u ssm-user python3 -m venv venv
-sudo -u ssm-user . venv/bin/activate
-sudo -u ssm-user pip install python-dotenv==1.1.0 polygon-api-client==1.14.5 confluent-kafka[schema-registry]==2.10.1 snowflake-connector-python==3.15.0 fastavro==1.12.0
+python3 -m venv venv
+. venv/bin/activate
+pip install python-dotenv==1.1.0 polygon-api-client==1.14.5 confluent-kafka[schema-registry]==2.10.1 snowflake-connector-python==3.15.0 fastavro==1.12.0
 
 # Create .env file with environment variables from AWS SSM Parameter Store
 cat <<EOF > .env
