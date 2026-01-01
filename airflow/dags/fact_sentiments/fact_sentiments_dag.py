@@ -71,7 +71,7 @@ DQ_DIM_SENTIMENT_DATE_FAIL = snowflake_client.read_sql_file(DATA_QUALITY_DIM_SEN
 with DAG(dag_id='fact_sentiments_dag',
     default_args=default_args,
     description='DAG to create fact_sentiments table in Snowflake',
-    schedule='@daily',
+    schedule='0 7 * * *',
     max_active_runs=1,
     tags=['sentiments', 'fact', 'snowflake']
 ):

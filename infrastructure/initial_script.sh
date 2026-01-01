@@ -56,17 +56,6 @@ server {
 
     server_name $DOMAIN_NAME www.$DOMAIN_NAME;
 
-    # Redirect all HTTP requests to HTTPS
-    return 301 https://$$host$$request_uri;
-}
-
-server {
-    listen 443 ssl;
-    server_name $DOMAIN_NAME www.$DOMAIN_NAME;
-
-    ssl_certificate /etc/letsencrypt/live/$DOMAIN_NAME/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/$DOMAIN_NAME/privkey.pem;
-
     # Reverse proxy to Metabase
     location /metabase/ {
         proxy_pass http://localhost:3000/;

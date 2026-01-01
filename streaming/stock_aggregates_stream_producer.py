@@ -42,7 +42,7 @@ with snowflake_conn.cursor() as cursor:
     cursor.execute("""
             select 
             distinct 
-            ticker
+            ticker_symbol
             from investment_analytics.core.dim_company
             where is_current = TRUE """)
     tickers = [f"AM.{row[0]}" for row in cursor.fetchall()]

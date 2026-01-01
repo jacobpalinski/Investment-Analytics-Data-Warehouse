@@ -66,7 +66,7 @@ DQ_DIM_FAIL = snowflake_client.read_sql_file(DATA_QUALITY_TESTS_DIMENSION_FAIL_P
 with DAG(dag_id='financials_fact_dag',
     default_args=default_args,
     description='DAG to create dim_company table in Snowflake',
-    schedule='@monthly',
+    schedule='0 6 * * *',
     max_active_runs=1,
     tags=['financials', 'dimension', 'snowflake']
 ):

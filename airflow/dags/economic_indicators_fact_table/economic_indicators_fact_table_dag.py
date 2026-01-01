@@ -58,7 +58,7 @@ DQ_FACT_FAIL = snowflake_client.read_sql_file(DATA_QUALITY_FACT_FAIL_PATH)
 with DAG(dag_id='economic_indicators_fact_dag',
     default_args=default_args,
     description='DAG to create dim_economic_indicators table in Snowflake',
-    schedule='@daily',
+    schedule='0 5 * * *',
     max_active_runs=1,
     tags=['economic_indicators', 'dimension', 'snowflake']
 ):
