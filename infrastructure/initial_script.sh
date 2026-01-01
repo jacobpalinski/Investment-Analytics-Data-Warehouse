@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-exec > >(tee /var/log/user-data.log | logger -t user-data) 2>&1
+exec > >(tee /var/log/initial_script.log | logger -t initial_script) 2>&1
 
 # Set variables
 DOMAIN_NAME="${domain_name}"

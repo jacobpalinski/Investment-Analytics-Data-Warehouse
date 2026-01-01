@@ -1,7 +1,12 @@
 #!/bin/bash
 set -euo pipefail
 
-exec > >(tee /var/log/deploy.log | logger -t user-data) 2>&1
+exec > >(tee /var/log/deploy.log | logger -t deploy) 2>&1
+
+# Create ssm-user if it doesn't exist
+if ! id ssm-user &>/dev/null; then
+  sudo useradd -m ssm-user
+fi
 
 # Set owner and permissions to SSM user
 sudo mkdir -p /opt/investment-analytics
@@ -12,9 +17,9 @@ sudo chown -R ssm-user:ssm-user /opt/investment-analytics
 cd /opt/investment-analytics/Investment-Analytics-Data-Warehouse
 
 # Create virtual environment and install necessary packages for running Kafka script
-python3 -m venv venv
+sudo -u ssm-userpython3 -m venv venv
 . venv/bin/activate
-pip install python-dotenv=1.1.0 polygon-api-client=1.14.5 confluent-kafka[schema-registry]=2.10.1 snowflake-connector-python=3.15.0 fastavro==1.12.0
+sudo -u ssm-user pip install python-dotenv==1.1.0 polygon-api-client==1.14.5 confluent-kafka[schema-registry]==2.10.1 snowflake-connector-python==3.15.0 fastavro==1.12.0
 
 # Create .env file with environment variables from AWS SSM Parameter Store
 cat <<EOF > .env
@@ -106,5 +111,7 @@ sudo docker compose up -d metabase
 
 # Print completion message
 echo "Airflow, Kafka and Metabase services have been started successfully."
+
+
 
 
