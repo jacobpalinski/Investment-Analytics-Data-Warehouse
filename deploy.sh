@@ -17,8 +17,8 @@ sudo chown -R ssm-user:ssm-user /opt/investment-analytics
 cd /opt/investment-analytics/Investment-Analytics-Data-Warehouse
 
 # Create virtual environment and install necessary packages for running Kafka script
-sudo -u ssm-userpython3 -m venv venv
-. venv/bin/activate
+sudo -u ssm-user python3 -m venv venv
+sudo -u ssm-user . venv/bin/activate
 sudo -u ssm-user pip install python-dotenv==1.1.0 polygon-api-client==1.14.5 confluent-kafka[schema-registry]==2.10.1 snowflake-connector-python==3.15.0 fastavro==1.12.0
 
 # Create .env file with environment variables from AWS SSM Parameter Store
