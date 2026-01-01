@@ -5,7 +5,7 @@ exec > >(tee /var/log/deploy.log | logger -t deploy) 2>&1
 
 # Create ssm-user if it doesn't exist
 if ! id ssm-user &>/dev/null; then
-  sudo useradd -m ssm-user
+  useradd -m ssm-user
 fi
 
 # Set owner and permissions to SSM user
