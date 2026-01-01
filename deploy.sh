@@ -4,16 +4,16 @@ set -euo pipefail
 exec > >(tee /var/log/deploy.log | logger -t deploy) 2>&1
 
 # Move Investment-Analytics-Data-Warehouse code from SSM Agent directory to /opt directory
-sudo mkdir -p /opt/investment-analytics
-sudo rsync -a \
-  /var/snap/amazon-ssm-agent/11797/Investment-Analytics-Data-Warehouse/ \
-  /opt/investment-analytics/Investment-Analytics-Data-Warehouse/
-cd /opt/investment-analytics/Investment-Analytics-Data-Warehouse
+#sudo mkdir -p /opt/investment-analytics
+#sudo rsync -a \
+  #/var/snap/amazon-ssm-agent/11797/Investment-Analytics-Data-Warehouse/ \
+  #/opt/investment-analytics/Investment-Analytics-Data-Warehouse/
+#cd /opt/investment-analytics/Investment-Analytics-Data-Warehouse
 
 # Create virtual environment and install necessary packages for running Kafka script
-python3 -m venv venv
-. venv/bin/activate
-pip install python-dotenv==1.1.0 polygon-api-client==1.14.5 confluent-kafka[schema-registry]==2.10.1 snowflake-connector-python==3.15.0 fastavro==1.12.0
+#python3 -m venv venv
+#. venv/bin/activate
+#pip install python-dotenv==1.1.0 polygon-api-client==1.14.5 confluent-kafka[schema-registry]==2.10.1 snowflake-connector-python==3.15.0 fastavro==1.12.0
 
 # Create .env file with environment variables from AWS SSM Parameter Store
 cat <<EOF > .env
@@ -85,14 +85,17 @@ sleep 180
 sudo docker exec investment-analytics-data-warehouse-kafka-1-1 kafka-topics --bootstrap-server kafka-1:9092 --create --topic stock_aggregates_raw --partitions 1 --replication-factor 3
 
 # Create Kafka Snowflake connector
-cd streaming
-curl -X POST -H "Content-Type: application/json" --data @connector.json http://localhost:8083/connectors
+#cd streaming
+#curl -X POST -H "Content-Type: application/json" --data @connector.json http://localhost:8083/connectors
+sudo docker exec -i investment-analytics-data-warehouse-kafka-connect-1 \
+  curl -X POST -H "Content-Type: application/json" --data @/connector.json http://localhost:8083/connectors
 
 # Run Kafka stock_aggregates_stream_producer.py script
-nohup python3 stock_aggregates_stream_producer.py > /var/log/stream_output.log 2>&1 & # Process can be stopped later using 'pkill -f stock_aggregates_stream_producer.py'
+# nohup python3 stock_aggregates_stream_producer.py > /var/log/stream_output.log 2>&1 & # Process can be stopped later using 'pkill -f stock_aggregates_stream_producer.py'
+sudo docker compose up -d stock-aggregates-producer
 
 # Go back to main directory
-cd ..
+#cd ..
 
 # Create metabase database in postgres container
 sudo docker exec investment-analytics-data-warehouse-postgres-1 psql -U ${POSTGRES_USERNAME} -d postgres -c "CREATE DATABASE metabase;"

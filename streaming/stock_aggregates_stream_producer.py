@@ -79,7 +79,11 @@ avro_serializer = AvroSerializer(
 producer_config = {
     'bootstrap.servers': os.getenv("KAFKA_BOOTSTRAP_SERVERS"),
     'key.serializer': StringSerializer('utf_8'),
-    'value.serializer': avro_serializer
+    'value.serializer': avro_serializer,
+    "enable.idempotence": True,
+    "retries": 5,
+    "delivery.timeout.ms": 120000,
+    "acks": "all",
 }
 
 producer = SerializingProducer(producer_config)

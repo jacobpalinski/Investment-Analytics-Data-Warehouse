@@ -1,0 +1,17 @@
+{
+    "name": "snowflake-connector-stock-aggregates",
+    "config": {
+        "connector.class": "com.snowflake.kafka.connector.SnowflakeSinkConnector",
+        "tasks.max": "1",
+        "topics": "stock_aggregates_raw",
+        "snowflake.url.name": "VIUVYPZ-EI22623.snowflakecomputing.com",
+        "snowflake.user.name": "${SNOWFLAKE_USER}",
+        "snowflake.private.key": "${SNOWFLAKE_PRIVATE_KEY_B64}",
+        "snowflake.database.name": "INVESTMENT_ANALYTICS",
+        "snowflake.schema.name": "RAW",
+        "snowflake.topic2table.map": "stock_aggregates_raw:RAW_STOCK_AGGREGATES",
+        "buffer.count.records": "5000",
+        "buffer.flush.time": "60",
+        "buffer.size.bytes": "5000000"
+    }
+}
