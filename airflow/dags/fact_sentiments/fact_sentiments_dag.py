@@ -20,7 +20,7 @@ snowflake_client = Snowflake(
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': datetime(2026, 2, 1, 7, 0),
+    'start_date': datetime(2026, 1, 2, 7, 0),
     'retries': 1,
     'retry_delay': timedelta(minutes=5),
     'catchup': False,

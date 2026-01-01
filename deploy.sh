@@ -1,12 +1,20 @@
 #!/bin/bash
 set -euo pipefail
 
-exec > >(tee /var/log/user-data.log | logger -t user-data) 2>&1
+exec > >(tee /var/log/deploy.log | logger -t user-data) 2>&1
+
+# Set owner and permissions to SSM user
+sudo mkdir -p /opt/investment-analytics
+sudo rsync -a \
+  /var/snap/amazon-ssm-agent/11797/Investment-Analytics-Data-Warehouse/ \
+  /opt/investment-analytics/Investment-Analytics-Data-Warehouse/
+sudo chown -R ssm-user:ssm-user /opt/investment-analytics
+cd /opt/investment-analytics/Investment-Analytics-Data-Warehouse
 
 # Create virtual environment and install necessary packages for running Kafka script
 python3 -m venv venv
-source venv/bin/activate
-pip install python-dotenv polygon-api-client confluent-kafka snowflake-connector-python
+. venv/bin/activate
+pip install python-dotenv=1.1.0 polygon-api-client=1.14.5 confluent-kafka[schema-registry]=2.10.1 snowflake-connector-python=3.15.0 fastavro==1.12.0
 
 # Create .env file with environment variables from AWS SSM Parameter Store
 cat <<EOF > .env
@@ -82,7 +90,7 @@ cd streaming
 curl -X POST -H "Content-Type: application/json" --data @connector.json http://localhost:8083/connectors
 
 # Run Kafka stock_aggregates_stream_producer.py script
-nohup python3 stock_aggregates_stream_producer.py > stream_output.log 2>&1 & # Process can be stopped later using 'pkill -f stock_aggregates_stream_producer.py'
+nohup python3 stock_aggregates_stream_producer.py > /var/log/stream_output.log 2>&1 & # Process can be stopped later using 'pkill -f stock_aggregates_stream_producer.py'
 
 # Go back to main directory
 cd ..

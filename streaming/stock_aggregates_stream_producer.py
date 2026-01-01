@@ -1,6 +1,7 @@
 # Import necessary libraries
 import os
 import logging
+import base64
 from typing import List
 from dotenv import load_dotenv
 from polygon import WebSocketClient
@@ -16,16 +17,20 @@ from datetime import datetime, timezone
 # Load environment variables
 load_dotenv()
 
+# Create setup for logging
+logger = logging.getLogger(__name__)
+
 # Get Polygon API key from environment variables
 polygon_api_key = os.getenv("POLYGON_API_KEY")
 
-# Create setup for logging
-logger = logging.getLogger(__name__)
+# Decode private key for Snowflake connection
+private_key_encoded=os.getenv("SNOWFLAKE_PRIVATE_KEY_B64")
+private_key_decoded = base64.b64decode(private_key_encoded)
 
 # Create snowflake connection
 snowflake_conn = snowflake.connector.connect(
     user=os.getenv("SNOWFLAKE_USER"),
-    private_key_encoded=os.getenv("SNOWFLAKE_PRIVATE_KEY_B64"),
+    private_key=private_key_decoded,
     account=os.getenv("SNOWFLAKE_ACCOUNT"),
     warehouse='INVESTMENT_ANALYTICS_DWH',
     database='INVESTMENT_ANALYTICS',
