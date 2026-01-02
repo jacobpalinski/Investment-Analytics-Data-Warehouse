@@ -14,11 +14,17 @@ import snowflake.connector
 import random
 from datetime import datetime, timezone
 
-# Load environment variables
-load_dotenv()
+# Create setup for logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s - %(message)s",
+)
 
 # Create setup for logging
 logger = logging.getLogger(__name__)
+
+# Load environment variables
+load_dotenv()
 
 # Get Polygon API key from environment variables
 polygon_api_key = os.getenv("POLYGON_API_KEY")
@@ -46,6 +52,12 @@ with snowflake_conn.cursor() as cursor:
             from investment_analytics.core.dim_company
             where is_current = TRUE """)
     tickers = [f"AM.{row[0]}" for row in cursor.fetchall()]
+
+logger.info("Starting stock aggregates producer...")
+logger.info("Loaded %d tickers", len(tickers))
+logger.info("Kafka bootstrap servers: %s", os.getenv("KAFKA_BOOTSTRAP_SERVERS"))
+logger.info("Kafka topic: %s", os.getenv("KAFKA_TOPIC"))
+logger.info("Schema Registry URL: %s", os.getenv("SCHEMA_REGISTRY_URL"))
 
 # Avro schema definition
 avro_schema_str = """
@@ -124,6 +136,7 @@ def handle_msg(msgs: List[WebSocketMessage]):
 
 # Run the WebSocket client
 try:
+    logger.info("Starting Polygon WebSocket client...")
     ws_client.run(handle_msg)
 except KeyboardInterrupt:
     logger.info("Manual interruption. Flushing Kafka producer and closing WebSocket...")
