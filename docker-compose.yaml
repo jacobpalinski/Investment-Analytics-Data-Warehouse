@@ -390,6 +390,11 @@ services:
       - zookeeper-1
       - zookeeper-2
       - zookeeper-3
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
   
   kafka-2:
     image: confluentinc/cp-kafka:7.3.3
@@ -411,6 +416,11 @@ services:
       - zookeeper-1
       - zookeeper-2
       - zookeeper-3
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
   
   kafka-3:
     image: confluentinc/cp-kafka:7.3.3
@@ -432,6 +442,11 @@ services:
       - zookeeper-1
       - zookeeper-2
       - zookeeper-3
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
   
   schema-registry:
     image: confluentinc/cp-schema-registry:7.3.3

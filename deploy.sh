@@ -46,8 +46,9 @@ EOF
 # Load environment variables from .env file
 source .env
 
-# Export base64 encoded environment variables
+# Export METABASE_PRIVATE_KEY, SNOWFLAKE_USER SNOWFLAKE_PRIVATE_KEY_B64 variables
 export METABASE_PRIVATE_KEY=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/METABASE_PRIVATE_KEY --with-decryption --query Parameter.Value --output text)
+export SNOWFLAKE_USER SNOWFLAKE_PRIVATE_KEY_B64
 
 # Create Metabase private key file
 echo "$METABASE_PRIVATE_KEY" > private_key_metabase.p8
