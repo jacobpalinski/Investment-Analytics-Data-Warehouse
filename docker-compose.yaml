@@ -474,7 +474,7 @@ services:
       - bash
       - -c
       - |
-        apt-get update && apt-get install -y gettext-base && \
+        yum install -y gettext && \
         envsubst < /connector.json.template > /connector.json && \
         confluent-hub install --no-prompt snowflakeinc/snowflake-kafka-connector:1.9.4 && \
         /etc/confluent/docker/run
