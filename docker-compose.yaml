@@ -466,18 +466,10 @@ services:
       CONNECT_VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
       CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
       CONNECT_PLUGIN_PATH: /usr/share/java, /usr/share/confluent-hub-components
-    env_file:
-      - .env
-    volumes:
-    - ./streaming/connector.json.template:/connector.json.template
     command:
       - bash
       - -c
-      - |
-        yum install -y gettext && \
-        envsubst < /connector.json.template > /connector.json && \
-        confluent-hub install --no-prompt snowflakeinc/snowflake-kafka-connector:1.9.4 && \
-        /etc/confluent/docker/run
+      - "confluent-hub install --no-prompt snowflakeinc/snowflake-kafka-connector:1.9.4 && /etc/confluent/docker/run"
 
   stock-aggregates-producer:
     build:

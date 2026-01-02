@@ -85,10 +85,11 @@ sleep 180
 sudo docker exec investment-analytics-data-warehouse-kafka-1-1 kafka-topics --bootstrap-server kafka-1:9092 --create --topic stock_aggregates_raw --partitions 1 --replication-factor 3
 
 # Create Kafka Snowflake connector
-#cd streaming
-#curl -X POST -H "Content-Type: application/json" --data @connector.json http://localhost:8083/connectors
-sudo docker exec -i investment-analytics-data-warehouse-kafka-connect-1 \
-  curl -X POST -H "Content-Type: application/json" --data @/connector.json http://localhost:8083/connectors
+cd streaming
+envsubst < connector_template.json > connector.json
+curl -X POST -H "Content-Type: application/json" --data @connector.json http://localhost:8083/connectors
+#sudo docker exec -i investment-analytics-data-warehouse-kafka-connect-1 \
+#curl -X POST -H "Content-Type: application/json" --data @/connector.json http://localhost:8083/connectors
 
 # Run Kafka stock_aggregates_stream_producer.py script
 # nohup python3 stock_aggregates_stream_producer.py > /var/log/stream_output.log 2>&1 & # Process can be stopped later using 'pkill -f stock_aggregates_stream_producer.py'

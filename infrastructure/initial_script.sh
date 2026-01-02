@@ -30,8 +30,8 @@ sudo apt update
 # Install Docker Packages
 sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-# Install Python3, venv, pip, git and jq
-sudo apt install -y python3 python3-venv python3-pip git jq
+# Install Python3, venv, pip, git, gettext and jq
+sudo apt install -y python3 python3-venv python3-pip git gettext jq
 
 # Install AWS CLI v2
 if ! command -v aws >/dev/null 2>&1; then
