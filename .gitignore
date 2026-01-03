@@ -9,3 +9,7 @@ public_key.pub
 rsa_key.pem
 ./infrastructure/.terraform.lock.hcl
 ./infrastructure/.terraform/
+__pycache__/
+*.pyc
+airflow/logs/
+.pytest_cache/
