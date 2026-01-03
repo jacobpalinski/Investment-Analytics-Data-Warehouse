@@ -3,39 +3,32 @@ name: Scheduled CI/CD
 on:
   push:
     branches:
-      - dev
-  #schedule:
-    #- cron: "0 11 * * *"
-    #- cron: "0 3 1 * *"
-  #workflow_run:
-    #workflows: ["Record Main Update"]
-    #types:
-      #- completed
+      - prd
 
 jobs:
-  #tickers_extraction:
-    #if: github.event.schedule == "0 2 1 * *"
-    #environment: prd
-    #runs-on: ubuntu-latest
+  tickers_extraction:
+    if: github.event.schedule == "0 2 1 * *"
+    environment: prd
+    runs-on: ubuntu-latest
 
-    #steps:
-      #- name: Checkout repository
-        #uses: actions/checkout@v4
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      #- name: Set up Python
-        #uses: actions/setup-python@v5
-        #with:
-          #python-version: "3.11"
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-      #- name: Install dependencies
-        #run: pip install -r requirements.txt
+      - name: Install dependencies
+        run: pip install -r requirements.txt
 
-      #- name: Run extract_listed_tickers.py
-        #working-directory: ./airflow/dags/nasdaq_listed_tickers
-        #run: python extract_listed_tickers.py
+      - name: Run extract_listed_tickers.py
+        working-directory: ./airflow/dags/nasdaq_listed_tickers
+        run: python extract_listed_tickers.py
 
   check-and-deploy:
-    #if: github.event.schedule == "0 3 * * *"
+    if: github.event.schedule == "0 3 * * *"
     environment: prd
     runs-on: ubuntu-latest
 
