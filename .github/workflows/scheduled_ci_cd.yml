@@ -3,7 +3,7 @@ name: Scheduled CI/CD
 on:
   push:
     branches:
-      - prd
+      - main
 
 jobs:
   tickers_extraction:
