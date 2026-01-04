@@ -23,5 +23,4 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run extract_listed_tickers.py
-        working-directory: ./airflow/dags/nasdaq_listed_tickers
-        run: python extract_listed_tickers.py
+        run: python airflow/dags/nasdaq_listed_tickers/extract_listed_tickers.py
