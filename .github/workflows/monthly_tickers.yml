@@ -1,8 +1,9 @@
 name: Monthly Ticker Extraction
 
 on:
-  schedule:
-    - cron: "0 2 1 * *"
+  push:
+    branches:
+      - main
   workflow_dispatch:
   
 jobs:
@@ -21,20 +22,6 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r requirements.txt
-      
-      - name: Debug repo structure
-        run: |
-          echo "Current directory: $(pwd)"
-          echo "Listing top-level files:"
-          ls -l
-          echo "Listing airflow folder:"
-          ls -l airflow
-          echo "Listing dags folder:"
-          ls -l airflow/dags
-      
-      - name: Debug Python path
-        run: |
-          python -c "import sys; print(sys.path)"
 
       - name: Run extract_listed_tickers.py
         run: |

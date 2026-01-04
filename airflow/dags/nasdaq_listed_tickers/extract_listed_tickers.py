@@ -4,7 +4,7 @@ import requests
 import logging
 from datetime import datetime
 from dotenv import load_dotenv
-from dags.utils.s3_utils import S3
+from airflow.dags.utils.s3_utils import S3
 
 # Create setup for logging
 logger = logging.getLogger(__name__)
