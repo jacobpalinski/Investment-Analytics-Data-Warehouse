@@ -20,7 +20,7 @@ snowflake_client = Snowflake(
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': datetime(2026, 1, 2, 7, 0),
+    'start_date': datetime(2026, 1, 2, 8, 0),
     'retries': 1,
     'retry_delay': timedelta(minutes=5),
     'catchup': False,
@@ -71,7 +71,7 @@ DQ_DIM_SENTIMENT_DATE_FAIL = snowflake_client.read_sql_file(DATA_QUALITY_DIM_SEN
 with DAG(dag_id='fact_sentiments_dag',
     default_args=default_args,
     description='DAG to create fact_sentiments table in Snowflake',
-    schedule='0 7 * * *',
+    schedule='0 8 * * *',
     max_active_runs=1,
     tags=['sentiments', 'fact', 'snowflake']
 ):

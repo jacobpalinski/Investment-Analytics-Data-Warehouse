@@ -19,7 +19,7 @@ snowflake_client = Snowflake(
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': datetime(2026, 1, 2, 6, 0),
+    'start_date': datetime(2026, 1, 2, 7, 0),
     'retries': 1,
     'retry_delay': timedelta(minutes=5),
     'catchup': False,
@@ -66,7 +66,7 @@ DQ_DIM_FAIL = snowflake_client.read_sql_file(DATA_QUALITY_TESTS_DIMENSION_FAIL_P
 with DAG(dag_id='financials_fact_dag',
     default_args=default_args,
     description='DAG to create dim_company table in Snowflake',
-    schedule='0 6 * * *',
+    schedule='0 7 * * *',
     max_active_runs=1,
     tags=['financials', 'dimension', 'snowflake']
 ):

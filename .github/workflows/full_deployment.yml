@@ -1,4 +1,4 @@
-name: Scheduled CI/CD
+name: Full Deployment
 
 on:
   push:
