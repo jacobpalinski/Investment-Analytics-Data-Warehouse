@@ -4,7 +4,7 @@ import requests
 import logging
 from datetime import datetime
 from dotenv import load_dotenv
-from airflow.dags.utils.s3_utils import S3
+from dags.utils.s3_utils import S3
 
 def extract_listed_tickers():
     '''
