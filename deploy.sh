@@ -42,6 +42,12 @@ export SNOWFLAKE_USER SNOWFLAKE_PRIVATE_KEY_B64
 echo "$METABASE_PRIVATE_KEY" > private_key_metabase.p8
 chmod 600 private_key_metabase.p8
 
+# Create Snowflake private key file
+echo "$SNOWFLAKE_PRIVATE_KEY_B64" | base64 -d > snowflake_private_key.pem
+chmod 600 snowflake_private_key.pem
+
+SNOWFLAKE_PRIVATE_KEY_FILE_CLEAN=$(sed '1d;$d' snowflake_private_key.pem | tr -d '\n')
+
 # Run Airflow docker containers
 sudo docker compose run --rm airflow-init
 sudo docker compose up -d postgres redis airflow-apiserver airflow-scheduler airflow-dag-processor airflow-worker airflow-triggerer
@@ -55,7 +61,7 @@ sudo docker exec investment-analytics-data-warehouse-airflow-scheduler-1 \
   --conn-type snowflake \
   --conn-login "$SNOWFLAKE_USER" \
   --conn-password "$SNOWFLAKE_PRIVATE_KEY_PASSPHRASE" \
-  --conn-extra "{\"database\":\"INVESTMENT_ANALYTICS\",\"warehouse\":\"INVESTMENT_ANALYTICS_DWH\", \"private_key_content\":\"$SNOWFLAKE_PRIVATE_KEY_B64\"}"
+  --conn-extra "{\"database\":\"INVESTMENT_ANALYTICS\",\"warehouse\":\"INVESTMENT_ANALYTICS_DWH\", \"private_key_content\":\"$SNOWFLAKE_PRIVATE_KEY_FILE_CLEAN\"}"
 
 # Create AWS connection in Airflow
 sudo docker exec investment-analytics-data-warehouse-airflow-scheduler-1 \
