@@ -46,17 +46,8 @@ chmod 600 private_key_metabase.p8
 echo "$SNOWFLAKE_PRIVATE_KEY_B64" | base64 -d > snowflake_private_key.pem
 chmod 600 snowflake_private_key.pem
 
-# Convert to single line for JSON
-SNOWFLAKE_PRIVATE_KEY_FILE_CLEAN=$(sed '1d;$d' snowflake_private_key.pem | tr -d '\n')
-
-# Create Snowflake connection extra JSON contents
-cat > snowflake_conn_extra.json <<EOF
-{
-  "database": "INVESTMENT_ANALYTICS",
-  "warehouse": "INVESTMENT_ANALYTICS_DWH",
-  "private_key_content": "$SNOWFLAKE_PRIVATE_KEY_FILE_CLEAN"
-}
-EOF
+# Prepare Snowflake private key content for Airflow connection
+SNOWFLAKE_PRIVATE_KEY_CONTENT=$(awk '{printf "%s\\n", $0}' snowflake_private_key.pem)
 
 # Run Airflow docker containers
 sudo docker compose run --rm airflow-init
@@ -71,7 +62,7 @@ sudo docker exec investment-analytics-data-warehouse-airflow-scheduler-1 \
   --conn-type snowflake \
   --conn-login "$SNOWFLAKE_USER" \
   --conn-password "$SNOWFLAKE_PRIVATE_KEY_PASSPHRASE" \
-  --conn-extra "$(cat snowflake_conn_extra.json)"
+  --conn-extra "{\"database\":\"INVESTMENT_ANALYTICS\",\"warehouse\":\"INVESTMENT_ANALYTICS_DWH\", \"private_key_content\":\"$SNOWFLAKE_PRIVATE_KEY_CONTENT\"}"
 
 # Create AWS connection in Airflow
 sudo docker exec investment-analytics-data-warehouse-airflow-scheduler-1 \
