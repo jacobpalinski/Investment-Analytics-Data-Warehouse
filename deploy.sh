@@ -44,7 +44,7 @@ chmod 600 private_key_metabase.p8
 
 # Create Snowflake private key JSON formatted string
 SNOWFLAKE_PRIVATE_KEY_B64_JSON=$(
-  printf "-----BEGIN PRIVATE KEY-----\n%s\n-----END PRIVATE KEY-----" \
+  printf -- "-----BEGIN PRIVATE KEY-----\n%s\n-----END PRIVATE KEY-----" \
     "$(echo "$SNOWFLAKE_PRIVATE_KEY_B64" | fold -w 64)" |
   sed ':a;N;$!ba;s/\n/\\n/g'
 )
