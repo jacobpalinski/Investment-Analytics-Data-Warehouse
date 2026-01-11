@@ -38,6 +38,16 @@ source .env
 export METABASE_PRIVATE_KEY=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/METABASE_PRIVATE_KEY --with-decryption --query Parameter.Value --output text)
 export SNOWFLAKE_USER SNOWFLAKE_PRIVATE_KEY_B64 SNOWFLAKE_ACCOUNT
 
+# Create Snowflake private key PEM file
+SNOWFLAKE_PRIVATE_KEY_PEM_PATH="./snowflake_private_key.pem"
+{
+  echo "-----BEGIN ENCRYPTED PRIVATE KEY-----"
+  echo "$SNOWFLAKE_PRIVATE_KEY_B64" | fold -w 64
+  echo "-----END ENCRYPTED PRIVATE KEY-----"
+} > "$SNOWFLAKE_PRIVATE_KEY_PEM_PATH"
+
+chmod 600 "$SNOWFLAKE_PRIVATE_KEY_PEM_PATH"
+
 # Create Metabase private key file
 echo "$METABASE_PRIVATE_KEY" > private_key_metabase.p8
 chmod 600 private_key_metabase.p8
@@ -62,7 +72,12 @@ sudo docker exec investment-analytics-data-warehouse-airflow-scheduler-1 \
   --conn-type snowflake \
   --conn-login "$SNOWFLAKE_USER" \
   --conn-password "$SNOWFLAKE_PRIVATE_KEY_PASSPHRASE" \
-  --conn-extra "{\"account\": \"$SNOWFLAKE_ACCOUNT\",\"database\":\"INVESTMENT_ANALYTICS\",\"warehouse\":\"INVESTMENT_ANALYTICS_DWH\", \"private_key_content\":\"$SNOWFLAKE_PRIVATE_KEY_B64\"}"
+  --conn-extra '{
+    "account": "'"$SNOWFLAKE_ACCOUNT"'",
+    "database": "INVESTMENT_ANALYTICS",
+    "warehouse": "INVESTMENT_ANALYTICS_DWH",
+    "private_key_file": "/keys/snowflake_private_key.pem"
+  }'
 
 # Create AWS connection in Airflow
 sudo docker exec investment-analytics-data-warehouse-airflow-scheduler-1 \
