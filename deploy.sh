@@ -46,7 +46,8 @@ SNOWFLAKE_PRIVATE_KEY_PEM_PATH="./snowflake_private_key.pem"
   echo "-----END ENCRYPTED PRIVATE KEY-----"
 } > "$SNOWFLAKE_PRIVATE_KEY_PEM_PATH"
 
-chmod 600 "$SNOWFLAKE_PRIVATE_KEY_PEM_PATH"
+chown root:0 "$SNOWFLAKE_PRIVATE_KEY_PEM_PATH"
+chmod 640 "$SNOWFLAKE_PRIVATE_KEY_PEM_PATH"
 
 # Create Metabase private key file
 echo "$METABASE_PRIVATE_KEY" > private_key_metabase.p8
