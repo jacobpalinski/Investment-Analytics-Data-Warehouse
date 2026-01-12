@@ -47,7 +47,7 @@ def extract_company_info():
     # Retrieve latest date of Nasdaq listed tickers extraction
     metadata = s3_client.get_object(bucket=os.getenv('AWS_S3_BUCKET'), key='metadata.json')
     metadata = json.loads(metadata['Body'].read().decode('utf-8'))
-    latest_run_date = metadata.get('nasdaq_listed_tickers')[0]
+    latest_run_date = metadata.get('nasdaq_listed_tickers')
     latest_run_date_no_hyphen = datetime.strptime(latest_run_date, "%Y-%m-%d").strftime("%Y%m%d")
 
     # Retrieve Nasdaq listed tickers csv file from S3
@@ -70,10 +70,10 @@ def extract_company_info():
             
             # Append results to company info list
             company_info.append({
-                "cik": getattr(polygon_response, "cik", None),
-                "company_name": finnhub_response.get("name", ""),
+                "cik": polygon_response.get("cik") if polygon_response else None,
+                "company_name": finnhub_response.get("company_name") if finnhub_response else None,
                 "ticker_symbol": ticker,
-                "industry": finnhub_response.get("finnhubIndustry", "")
+                "industry": finnhub_response.get("industry") if finnhub_response else None
             })
     
         except Exception as e:

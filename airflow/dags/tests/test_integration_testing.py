@@ -81,10 +81,10 @@ class TestIntegrationTesting:
                 
                 # Append results to company info list
                 company_info.append({
-                    "cik": getattr(polygon_response, "cik", None),
-                    "company_name": finnhub_response.get("name", ""),
-                    "ticker_symbol": ticker,
-                    "industry": finnhub_response.get("finnhubIndustry", "")
+                "cik": polygon_response.get("cik") if polygon_response else None,
+                "company_name": finnhub_response.get("company_name") if finnhub_response else None,
+                "ticker_symbol": ticker,
+                "industry": finnhub_response.get("industry") if finnhub_response else None
                 })
         
             except Exception as e:

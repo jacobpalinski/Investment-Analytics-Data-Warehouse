@@ -38,16 +38,33 @@ source .env
 export METABASE_PRIVATE_KEY=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/METABASE_PRIVATE_KEY --with-decryption --query Parameter.Value --output text)
 export SNOWFLAKE_USER SNOWFLAKE_PRIVATE_KEY_B64 SNOWFLAKE_ACCOUNT
 
-# Create Snowflake private key PEM file
-SNOWFLAKE_PRIVATE_KEY_PEM_PATH="./snowflake_private_key.pem"
-{
-  echo "-----BEGIN ENCRYPTED PRIVATE KEY-----"
-  echo "$SNOWFLAKE_PRIVATE_KEY_B64" | fold -w 64
-  echo "-----END ENCRYPTED PRIVATE KEY-----"
-} > "$SNOWFLAKE_PRIVATE_KEY_PEM_PATH"
+# Paths
+SNOWFLAKE_PKCS1_PEM="./snowflake_rsa_pkcs1.pem"
+SNOWFLAKE_PRIVATE_KEY_PEM="./snowflake_private_key.pem"
 
-chown root:0 "$SNOWFLAKE_PRIVATE_KEY_PEM_PATH"
-chmod 640 "$SNOWFLAKE_PRIVATE_KEY_PEM_PATH"
+# Recreate PKCS#1 RSA key from base64
+{
+  echo "-----BEGIN RSA PRIVATE KEY-----"
+  echo "$SNOWFLAKE_PRIVATE_KEY_B64" | fold -w 64
+  echo "-----END RSA PRIVATE KEY-----"
+} > "$SNOWFLAKE_PKCS1_PEM"
+
+chmod 600 "$SNOWFLAKE_PKCS1_PEM"
+
+# Convert PKCS#1 to ENCRYPTED PKCS#8 (Snowflake-compatible)
+openssl pkcs8 \
+  -topk8 \
+  -v2 aes-256-cbc \
+  -in "$SNOWFLAKE_PKCS1_PEM" \
+  -out "$SNOWFLAKE_PRIVATE_KEY_PEM" \
+  -passout pass:"$SNOWFLAKE_PRIVATE_KEY_PASSPHRASE"
+
+# Secure permissions for Docker/Airflow
+chown root:0 "$SNOWFLAKE_PRIVATE_KEY_PEM"
+chmod 640 "$SNOWFLAKE_PRIVATE_KEY_PEM"
+
+# Cleanup intermediate key
+shred -u "$SNOWFLAKE_PKCS1_PEM"
 
 # Create Metabase private key file
 echo "$METABASE_PRIVATE_KEY" > private_key_metabase.p8
