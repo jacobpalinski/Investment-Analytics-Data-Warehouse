@@ -70,13 +70,6 @@ shred -u "$SNOWFLAKE_PKCS1_PEM"
 echo "$METABASE_PRIVATE_KEY" > private_key_metabase.p8
 chmod 600 private_key_metabase.p8
 
-# Create Snowflake private key JSON formatted string
-#SNOWFLAKE_PRIVATE_KEY_B64_JSON=$(
- # printf -- "-----BEGIN PRIVATE KEY-----\n%s\n-----END PRIVATE KEY-----" \
-    #"$(echo "$SNOWFLAKE_PRIVATE_KEY_B64" | fold -w 64)" |
-  #sed ':a;N;$!ba;s/\n/\\n/g'
-#)
-
 # Run Airflow docker containers
 sudo docker compose run --rm airflow-init
 sudo docker compose up -d postgres redis airflow-apiserver airflow-scheduler airflow-dag-processor airflow-worker airflow-triggerer
