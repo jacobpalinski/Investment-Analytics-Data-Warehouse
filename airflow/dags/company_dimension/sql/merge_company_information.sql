@@ -13,7 +13,9 @@ row_number() over (partition by cik order by length(ticker_symbol) asc, ticker_s
 from investment_analytics.raw.raw_company_information
 ) as with_rn
 where rn = 1
-and industry is not null
+and industry not in (null, 'N/A', '')
+and company_name not in (null, 'N/A', '')
+and cik not in (null, 'N/A', '')
 ) as source
 on target.cik = source.cik
 

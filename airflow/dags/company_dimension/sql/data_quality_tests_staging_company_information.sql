@@ -37,3 +37,16 @@ case when count(*) = 0 then 'PASS' else 'FAIL' end,
 current_timestamp
 from investment_analytics.staging.staging_company_information
 where cik is null or company_name is null or ticker_symbol is null or industry is null;
+
+-- Invalid values (non null) in import columns
+insert into investment_analytics.data_quality.data_quality_results
+select
+'Invalid Column Values Check',
+'STAGING.STAGING_COMPANY_INFORMATION',
+count(*) as failed_count,
+case when count(*) = 0 then 'PASS' else 'FAIL' end,
+current_timestamp
+from investment_analytics.staging.staging_company_information
+where industry in (null, 'N/A', '')
+and company_name in (null, 'N/A', '')
+and cik in (null, 'N/A', '');
