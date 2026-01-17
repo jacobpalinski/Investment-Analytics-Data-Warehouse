@@ -37,7 +37,7 @@ def extract_company_news() -> None:
                     select 
                     distinct 
                     ticker_symbol
-                    from investment_analytics.tst.dim_company
+                    from investment_analytics.core.dim_company
                     where is_current = TRUE """)
         tickers = [row[0] for row in cursor.fetchall()]
 
