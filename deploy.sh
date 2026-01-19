@@ -23,6 +23,7 @@ REDDIT_CLIENT_SECRET=$(aws ssm get-parameter --name /investment_analytics_data_w
 REDDIT_USER_AGENT=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/REDDIT_USER_AGENT --with-decryption --query Parameter.Value --output text)
 REDDIT_USERNAME=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/REDDIT_USERNAME --with-decryption --query Parameter.Value --output text)
 REDDIT_PASSWORD=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/REDDIT_PASSWORD --with-decryption --query Parameter.Value --output text)
+SEC_API_USER_AGENT=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SEC_API_USER_AGENT --with-decryption --query Parameter.Value --output text)
 SNOWFLAKE_USER=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SNOWFLAKE_USER --with-decryption --query Parameter.Value --output text)
 SNOWFLAKE_PASSWORD=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SNOWFLAKE_PASSWORD --with-decryption --query Parameter.Value --output text)
 SNOWFLAKE_ACCOUNT=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/SNOWFLAKE_ACCOUNT --with-decryption --query Parameter.Value --output text)
