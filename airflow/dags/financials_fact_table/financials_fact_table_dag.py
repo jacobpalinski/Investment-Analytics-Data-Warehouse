@@ -19,7 +19,7 @@ snowflake_client = Snowflake(
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': datetime(2026, 1, 2, 7, 0),
+    'start_date': datetime(2024, 1, 2, 7, 0),
     'retries': 1,
     'retry_delay': timedelta(minutes=5),
     'catchup': False,
@@ -59,7 +59,7 @@ DQ_STAGING_SQL = snowflake_client.read_sql_file(DATA_QUALITY_TESTS_STAGING_PATH)
 DQ_FACT_SQL = snowflake_client.read_sql_file(DATA_QUALITY_TESTS_FACT_PATH)
 DQ_DIM_SQL = snowflake_client.read_sql_file(DATA_QUALITY_TESTS_DIMENSION_PATH)
 DQ_STAGING_FAIL = snowflake_client.read_sql_file(DATA_QUALITY_STAGING_FAIL_PATH)
-DQ_FACT_FAIL = snowflake_client.read_sql_file(DATA_QUALITY_STAGING_FAIL_PATH)
+DQ_FACT_FAIL = snowflake_client.read_sql_file(DATA_QUALITY_FACT_FAIL_PATH)
 DQ_DIM_FAIL = snowflake_client.read_sql_file(DATA_QUALITY_TESTS_DIMENSION_FAIL_PATH)
 
 # Define the DAG

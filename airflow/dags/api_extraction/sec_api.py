@@ -25,7 +25,7 @@ class SecApi:
 
     """
     def __init__(self, user_agent: str):
-        self.user_agent = user_agent
+        self.user_agent = "my_app" + " " + user_agent
         self.base_url = "https://data.sec.gov/api/xbrl/companyfacts/CIK"
         self.filter_keys = {'Revenues': ['revenues', 'income_statement'], 'GrossProfit': ['gross_profit', 'income_statement'], 'OperatingIncomeLoss': ['operating_income', 'income_statement'], 
         'NetIncomeLoss': ['net_income', 'income_statement'], 
@@ -49,7 +49,13 @@ class SecApi:
             dict: Dictionary with SEC API response data
         """
         # Create headers for SEC API requests
-        sec_api_headers = {'User-Agent': self.user_agent}
+        #sec_api_headers = {'User-Agent': self.user_agent}
+        sec_api_headers = {
+        "User-Agent": self.user_agent,
+        "Accept": "application/json",
+        "Accept-Encoding": "gzip, deflate",
+        "Connection": "keep-alive",
+        }
         url = self.base_url + f"{cik}.json"
 
         try:
