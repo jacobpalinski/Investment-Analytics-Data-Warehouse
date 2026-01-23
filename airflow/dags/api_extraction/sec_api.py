@@ -60,6 +60,9 @@ class SecApi:
 
         try:
             response = requests.get(url, headers=sec_api_headers, timeout=10)
+            print(response.status_code)
+            print(type(response))
+            print(response.text[:500])
             return response
         except Exception as e:
             logger.exception(f"SEC API error for {cik}: {e}")
