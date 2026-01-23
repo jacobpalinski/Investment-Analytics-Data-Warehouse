@@ -74,10 +74,16 @@ chmod 640 "$SNOWFLAKE_PRIVATE_KEY_PEM"
 shred -u "$SNOWFLAKE_PKCS1_PEM"
 
 # Create Metabase private key file
-echo "$METABASE_PRIVATE_KEY" > private_key_metabase.p8
-chmod 600 private_key_metabase.p8
-chown 2000:2000 private_key_metabase.p8
-chmod 400 private_key_metabase.p8
+METABASE_KEY_PATH="./private_key_metabase.p8"
+
+{
+  echo "-----BEGIN PRIVATE KEY-----"
+  echo "$METABASE_PRIVATE_KEY" | fold -w 64
+  echo "-----END PRIVATE KEY-----"
+} > "$METABASE_KEY_PATH"
+
+chown 2000:2000 "$METABASE_KEY_PATH"
+chmod 400 "$METABASE_KEY_PATH"
 
 # Run Airflow docker containers
 sudo docker compose run --rm airflow-init
