@@ -34,6 +34,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MERGE_SQL_PATH = os.path.join(BASE_DIR, 'sql', 'merge_company_information.sql')
 UPDATE_DIM_COMPANY = os.path.join(BASE_DIR, 'sql', 'update_current_dim_company.sql')
 INSERT_DIM_COMPANY = os.path.join(BASE_DIR, 'sql', 'insert_dim_company.sql')
+CREATE_DEFAULT_KEYS = os.path.join(BASE_DIR, 'sql', 'create_default_keys.sql')
 DATA_QUALITY_TESTS_STAGING = os.path.join(BASE_DIR, 'sql', 'data_quality_tests_staging_company_information.sql')
 DATA_QUALITY_TESTS_DIMENSION = os.path.join(BASE_DIR, 'sql', 'data_quality_tests_dim_company.sql')
 DATA_QUALITY_STAGING_FAIL_PATH = os.path.join(BASE_DIR, 'sql', 'data_quality_staging_company_information_fail.sql')
@@ -43,6 +44,7 @@ DATA_QUALITY_DIMENSION_FAIL_PATH = os.path.join(BASE_DIR, 'sql', 'data_quality_d
 MERGE_SQL = snowflake_client.read_sql_file(MERGE_SQL_PATH)
 UPDATE_DIM = snowflake_client.read_sql_file(UPDATE_DIM_COMPANY)
 INSERT_DIM = snowflake_client.read_sql_file(INSERT_DIM_COMPANY)
+CREATE_DEFAULT_KEYS_SQL = snowflake_client.read_sql_file(CREATE_DEFAULT_KEYS)
 DQ_STAGING_SQL = snowflake_client.read_sql_file(DATA_QUALITY_TESTS_STAGING)
 DQ_DIM_SQL = snowflake_client.read_sql_file(DATA_QUALITY_TESTS_DIMENSION)
 DQ_STAGING_FAIL = snowflake_client.read_sql_file(DATA_QUALITY_STAGING_FAIL_PATH)
@@ -95,6 +97,12 @@ with DAG(dag_id='company_dimension_dag',
         conn_id='snowflake_connection'
     )
 
+    create_default_keys = SQLExecuteQueryOperator(
+        task_id="create_default_keys",
+        sql=CREATE_DEFAULT_KEYS_SQL,
+        conn_id='snowflake_connection'
+    )
+
     data_quality_tests_dimension = SQLExecuteQueryOperator(
         task_id="data_quality_tests_dimension",
         sql=DQ_DIM_SQL,
@@ -113,7 +121,7 @@ with DAG(dag_id='company_dimension_dag',
 
     # Define task dependencies
     extraction >> merge_raw_company_information >> data_quality_tests_staging >> data_quality_tests_staging_fail >> update_current_dim_company >> insert_dim_company \
-    >> data_quality_tests_dimension >> data_quality_tests_dimension_fail
+    >> create_default_keys >> data_quality_tests_dimension >> data_quality_tests_dimension_fail
 
     
 
