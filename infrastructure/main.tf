@@ -11,7 +11,7 @@ terraform {
   backend "s3" {
     bucket         = "investment-analytics-terraform-state"
     key            = "prd/terraform.tfstate"
-    region         = var.aws_region
+    region         = "ap-southeast-1"
     dynamodb_table = "terraform-locks"
     encrypt        = true
   }
