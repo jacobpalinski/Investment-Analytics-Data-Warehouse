@@ -6,6 +6,15 @@ terraform {
       version = "6.20.0"
     }
   }
+
+  # Remote state backend
+  backend "s3" {
+    bucket         = "investment-analytics-terraform-state"
+    key            = "prd/terraform.tfstate"
+    region         = var.aws_region
+    dynamodb_table = "terraform-locks"
+    encrypt        = true
+  }
 }
 
 # Configure AWS credentials
