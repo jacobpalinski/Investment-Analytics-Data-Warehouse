@@ -2,7 +2,6 @@
 import requests
 import logging
 from datetime import datetime, timezone
-from fredapi import Fred
 
 # Create setup for logging
 logger = logging.getLogger(__name__)

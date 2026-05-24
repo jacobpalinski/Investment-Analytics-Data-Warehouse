@@ -143,6 +143,12 @@ variable "snowflake_private_key_passphrase" {
   sensitive = true
 }
 
+# Declare sns_topic variable
+variable "sns_topic" {
+  type = string
+  sensitive = true
+}
+
 # Declare fred_api_key variable
 variable "fred_api_key" {
   type = string
@@ -199,6 +205,12 @@ variable "domain_name" {
 
 # Declare certbot_email variable
 variable "certbot_email" {
+  type = string
+  sensitive = true
+}
+
+# Declare sns_email variable
+variable "sns_email" {
   type = string
   sensitive = true
 }

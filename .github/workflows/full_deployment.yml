@@ -66,6 +66,8 @@ jobs:
       TF_VAR_snowflake_password: ${{secrets.SNOWFLAKE_PASSWORD}}
       TF_VAR_snowflake_account: ${{secrets.SNOWFLAKE_ACCOUNT}}
       TF_VAR_snowflake_role: ${{secrets.SNOWFLAKE_ROLE}}
+      TF_VAR_sns_email: ${{secrets.SNS_EMAIL}}
+      TF_VAR_sns_topic: ${{secrets.SNS_TOPIC}}
       TF_VAR_fred_api_key: ${{secrets.FRED_API_KEY}}
       TF_VAR_sec_api_user_agent: ${{secrets.SEC_API_USER_AGENT}}
       TF_VAR_snowflake_private_key_b64: ${{secrets.SNOWFLAKE_PRIVATE_KEY_B64}}
