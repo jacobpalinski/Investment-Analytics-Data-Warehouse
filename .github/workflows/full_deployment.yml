@@ -131,8 +131,8 @@ jobs:
           curl -X POST -H 'Content-Type: application/json' --data @connector.json http://localhost:8083/connectors
       
       - name: Run tests
-        working-directory: .
-        run: pytest airflow/dags/tests -vv
+        working-directory: ./airflow
+        run: pytest dags/tests -vv
       
       - name: Stop integration services
         working-directory: ./airflow/dags/tests
