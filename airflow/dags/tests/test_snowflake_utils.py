@@ -34,7 +34,7 @@ class TestSnowflake:
         schema=schema,
         )
 
-        # Assert
+        # Assert successful connection
         assert conn == mock_connection
         mock_connect.assert_called_once_with(
         user=user,
@@ -73,8 +73,8 @@ class TestSnowflake:
                 schema=schema,
             )
     
-    def test_query_current_ciks(self, mocker, mock_snowflake_client):
-        """ Test querying current CIKs from Snowflake """
+    def test_query_current_ciks_exists(self, mocker, mock_snowflake_client):
+        """ Test querying_current_ciks from Snowflake Class where ciks exist in dim_company table """
         # Mock cursor and connection
         mock_cursor = mocker.MagicMock()
         mock_cursor.fetchall.return_value = [(12345,), (67890,)]
@@ -89,9 +89,29 @@ class TestSnowflake:
         # Run test
         result = mock_snowflake_client.query_current_ciks(connection=mock_connection, schema=schema, table_name=table_name)
 
-        # Assertions
+        # Assert expected ciks are returned
         mock_cursor.execute.assert_called_once()
         assert result == [12345, 67890]
+    
+    def test_query_current_ciks_not_exists(self, mocker, mock_snowflake_client):
+        """ Test querying_current_ciks from Snowflake Class where ciks don't exist in dim_company table """
+        # Mock cursor and connection
+        mock_cursor = mocker.MagicMock()
+        mock_cursor.fetchall.return_value = []
+
+        mock_connection = mocker.MagicMock()
+        mock_connection.cursor.return_value.__enter__.return_value = mock_cursor
+
+        # Create test schema and table_name values
+        schema = "tst"
+        table_name = "dim_company"
+
+        # Run test
+        result = mock_snowflake_client.query_current_ciks(connection=mock_connection, schema=schema, table_name=table_name)
+
+        # Assert no ciks are returned
+        mock_cursor.execute.assert_called_once()
+        assert result == []
     
     def test_load_to_snowflake_success(self, mocker, mock_snowflake_client):
         """ Test successful load_to_snowflake with mocked write_pandas """

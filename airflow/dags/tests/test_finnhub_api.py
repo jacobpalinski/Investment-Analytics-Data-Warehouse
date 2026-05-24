@@ -32,7 +32,7 @@ class TestFinnhubApi:
         assert result == {"company_name": "", "industry": ""}
 
     def test_extract_company_profile_exception(self, monkeypatch, mock_finnhub_client, caplog):
-        """Test when the client raises an exception."""
+        """ Test when the client raises an exception. """
         # Mock exception
         class MockClient(mock_finnhub_client):
             def company_profile2(self, symbol):

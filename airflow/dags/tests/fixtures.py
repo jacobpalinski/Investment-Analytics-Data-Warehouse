@@ -22,7 +22,7 @@ def mock_finnhub_client(monkeypatch):
         def company_profile2(self, symbol):
             return {"name": "Apple", "finnhubIndustry": "Technology"}
 
-    # Replace Client in your module with the mock
+    # Replace Finnhub client with mock
     monkeypatch.setattr("dags.api_extraction.finnhub_api.Client", MockClient)
     return MockClient
 
@@ -38,7 +38,7 @@ def mock_fred_client(monkeypatch):
             self.called_with = (series_id, sort_order, limit)
             return {"2025-10-19": 3.5}
 
-    # Replace Client in your module with the mock
+    # Replace Fred client with mock
     monkeypatch.setattr("dags.api_extraction.fred_api.Fred", MockClient)
     return MockClient
 
@@ -90,9 +90,7 @@ def mock_polygon_client(monkeypatch):
 
 @pytest.fixture
 def mock_reddit_env(monkeypatch):
-    """
-    Fixture that mocks Reddit API environment for testing RedditApi class.
-    """
+    """ Fixture that mocks Reddit API environment for testing RedditApi class. """
     current_time = 10000000
     monkeypatch.setattr(time, "time", lambda: current_time)
 
@@ -121,7 +119,7 @@ def mock_reddit_env(monkeypatch):
             assert name == "investing"
             return DummySubreddit()
 
-    # Return everything needed for the test
+    # Return everything needed for testing
     return {
         "current_time": current_time,
         "new_post": new_post,
@@ -131,13 +129,13 @@ def mock_reddit_env(monkeypatch):
 
 @pytest.fixture
 def sec_api():
-    """Provides a SecApi instance"""
+    """ Provides a SecApi instance """
     return SecApi(user_agent="test_agent")
 
 
 @pytest.fixture
 def mock_sec_success_response():
-    """Mocks a successful SEC API response object"""
+    """ Mocks a successful SEC API response object """
     class MockResponse:
         status_code = 200
 
@@ -149,7 +147,7 @@ def mock_sec_success_response():
 
 @pytest.fixture
 def mock_sec_full_response():
-    """Full SEC API response payload"""
+    """ Full SEC API response payload """
     return {
         "facts": {
             "us-gaap": {

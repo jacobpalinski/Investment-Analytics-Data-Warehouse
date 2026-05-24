@@ -1,7 +1,7 @@
 # Import modules
 import pytest
 import pandas as pd
-from dags.fact_sentiments.sentiment_score_functions import (
+from dags.fact_sentiments_dag.sentiment_score_functions import (
     calculate_sentiment_scores,
     process_text_with_chunking,
     process_in_batches_short_description,
@@ -9,7 +9,7 @@ from dags.fact_sentiments.sentiment_score_functions import (
 )
 
 class TestSentimentScoreFunctions:
-
+    """ Test suite for sentiment score functions in sentiment_score_functions.py """
     def test_calculate_sentiment_scores(self):
         """ Tests calculate_sentiment_scores function """
         # Batch output mock
@@ -24,7 +24,7 @@ class TestSentimentScoreFunctions:
         # Call calculate_sentiment_scores function
         result = calculate_sentiment_scores(batch_outputs)
 
-        # Assert expected result
+        # Assert expected score
         assert pytest.approx(result, 0.0001) == [0.8]
 
 
@@ -34,7 +34,7 @@ class TestSentimentScoreFunctions:
         model = mocker.Mock()
         tokenizer = mocker.Mock()
 
-        # Assert expected result
+        # Assert expected scores
         assert process_text_with_chunking(model, tokenizer, "") == 0.5
         assert process_text_with_chunking(model, tokenizer, "   ") == 0.5
         assert process_text_with_chunking(model, tokenizer, None) == 0.5
@@ -62,7 +62,7 @@ class TestSentimentScoreFunctions:
         # Call process_text_with_chunking function
         result = process_text_with_chunking(model, tokenizer, "hello world")
 
-        # Assert expected result
+        # Assert expected score
         assert pytest.approx(result, 0.0001) == 0.8
 
 
@@ -101,7 +101,7 @@ class TestSentimentScoreFunctions:
         # Call process_text_with_chunking function
         result = process_text_with_chunking(model, tokenizer, "x" * 1000, max_tokens=50, chunk_size=100)
 
-        # Assert expected result
+        # Assert expected score
         expected = (0.7 + 0.75 + 0.85) / 3
         assert pytest.approx(expected, 0.0001) == result
 
@@ -138,12 +138,12 @@ class TestSentimentScoreFunctions:
         # Call process_in_batches_short_description function
         result = process_in_batches_short_description(model, df, "text", batch_size=2)
 
-        # Assert expected result
+        # Assert expected scores
         assert result == pytest.approx([0.7, 0.75, 0.85])
 
 
     def test_process_in_batches_long_description(self, mocker):
-        """ Tests process_in_batches_long_description function"""
+        """ Tests process_in_batches_long_description function """
         # Mock model and tokenizer
         model = mocker.Mock()
         tokenizer = mocker.Mock()
@@ -174,6 +174,6 @@ class TestSentimentScoreFunctions:
             model, tokenizer, df, "text", batch_size=1
         )
 
-        # Assert expected result
+        # Assert expected scores
         expected = [0.7, 0.75, 0.85]
         assert result == pytest.approx(expected)

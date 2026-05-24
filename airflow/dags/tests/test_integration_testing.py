@@ -9,9 +9,6 @@ import pytest
 import requests
 import pandas as pd
 from dotenv import load_dotenv
-from typing import List
-from polygon import WebSocketClient
-from polygon.websocket.models import WebSocketMessage, Feed, Market
 from confluent_kafka import SerializingProducer
 from confluent_kafka.schema_registry import SchemaRegistryClient
 from confluent_kafka.schema_registry.avro import AvroSerializer
@@ -28,6 +25,9 @@ from dags.utils.s3_utils import S3
 
 # Create setup for logging
 logger = logging.getLogger(__name__)
+
+# Load environment variables
+load_dotenv()
 
 class TestIntegrationTesting:
     """ Class for integration tests """
@@ -81,6 +81,7 @@ class TestIntegrationTesting:
                 
                 # Append results to company info list
                 company_info.append({
+                "extraction_timestamp": datetime.now(timezone.utc),
                 "cik": polygon_response.get("cik") if polygon_response else None,
                 "company_name": finnhub_response.get("company_name") if finnhub_response else None,
                 "ticker_symbol": ticker,
@@ -332,6 +333,7 @@ class TestIntegrationTesting:
                 # Append financials items to the list            
                 parsed_financials = sec_api_client.extract_financial_data(cik=cik, response=financials)
                 financials_data.extend(parsed_financials)
+            
             except Exception as e:
                 logger.error(f"Error fetching financials for CIK {cik}: {e}", exc_info=True)
         
@@ -411,14 +413,14 @@ class TestIntegrationTesting:
         """
         Tests extract_nasdaq_listed_tickers from GitHub URL and create csv with tickers in S3
         """
-        # Initantiates S3 class
+        # Instantiates S3 class
         s3_client = S3(aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"), aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"))
 
         # Github CSV file URL
         csv_url = 'https://raw.githubusercontent.com/datasets/nasdaq-listings/refs/heads/main/data/nasdaq-listed.csv'
 
         # Download raw data from GitHub URL
-        response = requests.get(csv_url)
+        response = requests.get(csv_url, timeout=60)
         if response.status_code == 200:
             nasdaq_listings_csv_data = response.content  # raw bytes
         else:
