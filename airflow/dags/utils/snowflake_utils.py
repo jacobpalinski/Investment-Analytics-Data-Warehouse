@@ -73,6 +73,8 @@ class Snowflake:
                         where is_current = TRUE """)
             ciks = [row[0] for row in cursor.fetchall()]
         
+        logger.info(f"Successfully retrieved {len(ciks)} from {schema}.{table_name}")
+        
         return ciks
     
     def load_to_snowflake(self, connection: snowflake.connector.SnowflakeConnection, data: list, target_table: str) -> None:
@@ -89,7 +91,9 @@ class Snowflake:
         success, nchunks, nrows, _ = write_pandas(connection, df, target_table)
         
         if not success:
-            raise Exception(f"Failed to load data into {target_table}.")
+            logger.exception(f"Failed to load data into {target_table}.")
+        
+        logger.info(f"Successfully loaded data into {target_table}")
     
     def read_sql_file(self, file_path: str) -> str:
         """
