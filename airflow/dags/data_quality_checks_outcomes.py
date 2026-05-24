@@ -5,7 +5,8 @@ from dags.utils.snowflake_utils import Snowflake
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 
 def fail_if_data_quality_tests_failed(sql_string:str, schema:str, table_name:str) -> ValueError:
-    """    Checks if any data quality checks failed for a given set of data quality checks
+    """
+    Checks if any data quality checks failed for a given set of data quality checks
     Raises an error if any checks failed.
     """
     # Load environment variables
