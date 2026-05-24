@@ -1,5 +1,4 @@
 # Import modules
-import json
 import logging
 from finnhub import Client
 
@@ -32,10 +31,20 @@ class FinnhubApi:
         """
         try:
             response = self.finnhub_client.company_profile2(symbol=ticker)
-            return {
+            
+            if not response:
+                logger.warning(f"No company profile data returned for {ticker} from Finnhub API")
+                return {}
+            
+            result = {
                 "company_name": response.get("name", ""),
                 "industry": response.get("finnhubIndustry", "")
             }
+            logger.info(
+                f"Successfully extracted company profile information for {ticker} from Finnhub API"
+            )
+            return result
+        
         except Exception as e:
             logger.exception(f"Finnhub API error for {ticker}: {e}")
             return {}

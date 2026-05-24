@@ -1,5 +1,4 @@
 # Import modules
-import json
 import logging
 from datetime import datetime, timedelta
 from polygon import RESTClient
@@ -35,9 +34,18 @@ class PolygonApi:
         """
         try:
             response = self.polygon_client.get_ticker_details(ticker)
+            
+            if not response:
+                logger.warning(f"No cik returned for {ticker} from Polygon API")
+                return {}
+
+            logger.info(
+                f"Sucessfully extracted cik for {ticker} from Polygon API"
+            )
             return {
                 "cik": getattr(response, "cik", None)
             }
+        
         except Exception as e:
             logger.exception(f"Polygon API error for {ticker}: {e}")
             return {}
@@ -63,7 +71,13 @@ class PolygonApi:
             order="asc",
             limit=1000,
             sort="published_utc")
+
+            if not response:
+                logger.warning(f"There are no published articles within the last day for {ticker}")
+            
+            logger.info(f"Successfully retrieved published articles for {ticker}")
             return response
+        
         except Exception as e:
             logger.exception(f"Failed to return news for {ticker} from Polygon API: {e}")
             return {}

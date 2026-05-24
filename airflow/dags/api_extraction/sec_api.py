@@ -1,8 +1,7 @@
 # Import modules
 import requests
-import json
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timezone
 from fredapi import Fred
 
 # Create setup for logging
@@ -49,7 +48,6 @@ class SecApi:
             dict: Dictionary with SEC API response data
         """
         # Create headers for SEC API requests
-        #sec_api_headers = {'User-Agent': self.user_agent}
         sec_api_headers = {
         "User-Agent": self.user_agent,
         "Accept": "application/json",
@@ -60,7 +58,13 @@ class SecApi:
 
         try:
             response = requests.get(url, headers=sec_api_headers, timeout=10)
+
+            if not response:
+                logger.warning(f"Empty response for cik {cik} from SEC API")
+            
+            logger.info(f"Successfully retrieved response data from SEC API for cik {cik}")
             return response
+        
         except Exception as e:
             logger.exception(f"SEC API error for {cik}: {e}")
             return {}
@@ -120,14 +124,15 @@ class SecApi:
             value = last_record.get('val')
             
             results.append({
+            'extraction_timestamp': datetime.now(timezone.utc),
             'cik': cik,
-            'fiscal_year': last_record.get('fy'),
-            'fiscal_quarter': last_record.get('fp'),
-            'filing_date': last_record.get('filed'),
-            'financial_statement': values[1],
-            'item': values[0],
-            'currency': first_currency,
-            'value': last_record.get('val')
+            'fiscal_year': fiscal_year,
+            'fiscal_quarter': fiscal_quarter,
+            'filing_date': filing_date,
+            'financial_statement': financial_statement,
+            'item': item,
+            'currency': currency,
+            'value': value
             })
         
         return results

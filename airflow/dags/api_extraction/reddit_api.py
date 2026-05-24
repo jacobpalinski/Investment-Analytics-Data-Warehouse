@@ -48,7 +48,9 @@ class RedditApi:
                 if current_time - submission.created_utc <= one_day_seconds
             ]
 
+            logger.info(f"Successfully extracted {len(submissions)} submissions from r/investing subreddit")
             return submissions_filtered
+        
         except Exception as e:
             logger.exception(f"Reddit API error for {subreddit_name}: {e}")
             return {}

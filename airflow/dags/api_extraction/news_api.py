@@ -1,8 +1,6 @@
 # Import modules
-import json
 import logging
 import concurrent.futures
-from datetime import datetime, timedelta
 from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception_type, before_log, after_log
 from newsdataapi import NewsDataApiClient
 
@@ -42,7 +40,7 @@ class NewsApi:
             dict: The API response data
         """
         logger.info(f"Attempting API call with params: {params}")
-
+        
         def api_call():
             return self.news_api_client.news_api(
                 category=params["category"],
@@ -62,5 +60,7 @@ class NewsApi:
 
         if not response or "results" not in response or len(response["results"]) == 0:
             raise ValueError("Empty or invalid response received from NewsData API.")
+        
+        logger.info(f"Successfully extracted articles for {params} from News API")
 
         return response

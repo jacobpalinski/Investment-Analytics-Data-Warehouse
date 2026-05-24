@@ -1,7 +1,5 @@
 # Import modules
-import json
 import logging
-from datetime import datetime, timedelta
 from fredapi import Fred
 
 # Create setup for logging
