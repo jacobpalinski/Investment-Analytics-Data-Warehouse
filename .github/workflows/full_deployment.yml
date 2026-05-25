@@ -132,6 +132,8 @@ jobs:
       
       - name: Run tests
         working-directory: ./airflow
+        env:
+          PYTHONPATH: ${{ github.workspace }}/airflow
         run: pytest dags/tests -vv
       
       - name: Stop integration services
