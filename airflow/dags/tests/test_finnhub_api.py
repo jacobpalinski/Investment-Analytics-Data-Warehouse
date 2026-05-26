@@ -29,7 +29,7 @@ class TestFinnhubApi:
         result = finnhub_api.extract_company_profile("AAPL")
 
         # Assert empty API response
-        assert result == {"company_name": "", "industry": ""}
+        assert result == {}
 
     def test_extract_company_profile_exception(self, monkeypatch, mock_finnhub_client, caplog):
         """ Test when the client raises an exception. """

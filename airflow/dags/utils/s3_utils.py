@@ -63,7 +63,7 @@ class S3:
             data (bytes): The data to write to the S3 object.
         """
         try:
-            logger.info(f"Putting data to the following S3 Bucket: {self.bucket} and S3 Key: {key}")
+            logger.info(f"Putting data to the following S3 Bucket: {bucket} and S3 Key: {key}")
             self.s3.put_object(Bucket=bucket, Key=key, Body=data)
         
         except ClientError as e:
