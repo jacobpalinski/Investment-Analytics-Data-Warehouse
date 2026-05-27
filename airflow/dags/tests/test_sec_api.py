@@ -2,13 +2,13 @@
 import pytest
 import requests
 from datetime import datetime, timezone
+import freezegun
 from freezegun import freeze_time
-from freezegun.config import configure
 from dags.api_extraction.sec_api import SecApi
 from dags.tests.fixtures import sec_api, mock_sec_success_response, mock_sec_full_response
 
 # Extend the ignore list for freezegun to include transformers to avoid issues with time freezing in tests
-configure(extend_ignore_list=["transformers"])
+freezegun.configure(extend_ignore_list=["transformers", "tensorflow"])
 
 class TestSecApi:
     """ Test suite for SecApi class """
