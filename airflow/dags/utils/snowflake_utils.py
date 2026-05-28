@@ -92,6 +92,7 @@ class Snowflake:
         
         if not success:
             logger.exception(f"Failed to load data into {target_table}.")
+            raise Exception(f"Failed to load data into {target_table}.")
         
         logger.info(f"Successfully loaded data into {target_table}")
     
