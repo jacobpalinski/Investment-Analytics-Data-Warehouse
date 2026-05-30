@@ -159,6 +159,14 @@ jobs:
             --max-errors "0" \
             --parameters '{
               "commands": [
+                "set -ex",
+                "whoami",
+                "pwd",
+                "which git || true",
+                "git --version || true",
+                "curl -I https://github.com || true",
+                "mkdir -p /opt/apps",
+                "cd /opt/apps",
                 "if [ -d Investment-Analytics-Data-Warehouse/.git ]; then cd Investment-Analytics-Data-Warehouse && git fetch origin && git checkout main && git pull origin main; else git clone --branch main https://github.com/jacobpalinski/Investment-Analytics-Data-Warehouse.git; cd Investment-Analytics-Data-Warehouse; fi",
                 "chmod +x deploy.sh",
                 "./deploy.sh"
