@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euo pipefail
+set -euxo pipefail
 
 exec > >(tee /var/log/deploy.log | logger -t deploy) 2>&1
 
