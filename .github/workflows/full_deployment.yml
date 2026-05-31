@@ -161,7 +161,7 @@ jobs:
               "commands": [
                 "if [ -d Investment-Analytics-Data-Warehouse/.git ]; then cd Investment-Analytics-Data-Warehouse && git fetch origin && git checkout main && git pull origin main; else git clone --branch main https://github.com/jacobpalinski/Investment-Analytics-Data-Warehouse.git; cd Investment-Analytics-Data-Warehouse; fi",
                 "chmod +x deploy.sh",
-                "./deploy.sh"
+                "bash -x ./deploy.sh"
               ]
             }' \
             --query "Command.CommandId" \

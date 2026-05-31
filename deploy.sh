@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euxo pipefail
 
-exec > /tmp/deploy.log 2>&1
+# exec > /tmp/deploy.log 2>&1
 
 # Create .env file with environment variables from AWS SSM Parameter Store
 cat <<EOF > .env
