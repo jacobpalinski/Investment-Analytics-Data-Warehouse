@@ -39,7 +39,7 @@ CERTBOT_EMAIL=$(aws ssm get-parameter --name /investment_analytics_data_warehous
 EOF
 
 # Load environment variables from .env file
-source .env
+#source .env
 
 # Export METABASE_PRIVATE_KEY, SNOWFLAKE_USER SNOWFLAKE_PRIVATE_KEY_B64 variables
 export METABASE_PRIVATE_KEY=$(aws ssm get-parameter --name /investment_analytics_data_warehouse/prd/METABASE_PRIVATE_KEY --with-decryption --query Parameter.Value --output text)
