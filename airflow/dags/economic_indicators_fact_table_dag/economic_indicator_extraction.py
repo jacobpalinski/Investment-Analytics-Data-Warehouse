@@ -1,5 +1,6 @@
 # Import necessary libraries
 import os
+import time
 from datetime import datetime
 import logging
 from dotenv import load_dotenv
@@ -66,6 +67,7 @@ def extract_economic_indicators():
             value = None
 
         economic_indicators.append({'date': today_date, 'year': year, 'quarter': quarter, 'month': month_name, 'day': day, 'indicator': indicator, 'value': value})
+        time.sleep(2) # Sleep to avoid hitting API rate limits
     
     # Load data into Snowflake test table
     snowflake_client.load_to_snowflake(connection=snowflake_conn, data=economic_indicators, target_table='RAW_ECONOMIC_INDICATORS')

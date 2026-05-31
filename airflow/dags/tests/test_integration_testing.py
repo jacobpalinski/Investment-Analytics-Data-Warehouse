@@ -399,7 +399,8 @@ class TestIntegrationTesting:
                 value = None
 
             economic_indicators.append({'date': date, 'year': year, 'quarter': quarter, 'month': month_name, 'day': day, 'indicator': indicator, 'value': value})
-        
+            time.sleep(2) # Sleep to avoid hitting API rate limits
+
         # Load data into Snowflake test table
         snowflake_client.load_to_snowflake(connection=snowflake_conn, data=economic_indicators, target_table='ECONOMIC_INDICATORS_TST')
 
