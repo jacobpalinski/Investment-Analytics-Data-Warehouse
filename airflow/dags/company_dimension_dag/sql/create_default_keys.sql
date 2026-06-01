@@ -17,7 +17,7 @@ effective_start,
 effective_end,
 is_current
 ))
-on target.company_id = source.company_id
+on target.company_name = source.company_name
 
 when not matched then
 insert (

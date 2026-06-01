@@ -27,5 +27,5 @@ target.ticker_symbol = source.ticker_symbol,
 target.industry = source.industry
 
 when not matched then
-insert (cik, company_name, ticker_symbol, industry) 
+insert (extraction_timestamp, cik, company_name, ticker_symbol, industry) 
 values (source.extraction_timestamp, source.cik, source.company_name, source.ticker_symbol, source.industry);
