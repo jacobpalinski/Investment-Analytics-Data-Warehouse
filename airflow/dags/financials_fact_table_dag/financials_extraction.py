@@ -39,13 +39,16 @@ def extract_financials():
     financials_data = []
 
     for cik in ciks:
+        if cik == 'Not Applicable':
+            logger.warning(f"Skipping CIK {cik}")
+            continue
         try:
             # Fetch financials for the CIK
             financials = sec_api_client.sec_data_request(cik=cik)
 
             # Append financials items to the list            
             parsed_financials = sec_api_client.extract_financial_data(cik=cik, response=financials)
-            financials_data.append(parsed_financials)
+            financials_data.extend(parsed_financials)
         except Exception as e:
             logger.error(f"Error fetching financials for CIK {cik}: {e}", exc_info=True)
     

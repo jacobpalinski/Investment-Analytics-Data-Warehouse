@@ -68,7 +68,7 @@ def extract_company_info():
             
             # Append results to company info list
             company_info.append({
-                "extraction_timestamp": datetime.now(timezone.utc),
+                "extraction_timestamp": datetime.now(timezone.utc).isoformat(),
                 "cik": polygon_response.get("cik") if polygon_response else None,
                 "company_name": finnhub_response.get("company_name") if finnhub_response else None,
                 "ticker_symbol": ticker,

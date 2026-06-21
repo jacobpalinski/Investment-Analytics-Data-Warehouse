@@ -123,7 +123,7 @@ class SecApi:
             value = last_record.get('val')
             
             results.append({
-            'extraction_timestamp': datetime.now(timezone.utc),
+            'extraction_timestamp': datetime.now(timezone.utc).isoformat(),
             'cik': cik,
             'fiscal_year': fiscal_year,
             'fiscal_quarter': fiscal_quarter,

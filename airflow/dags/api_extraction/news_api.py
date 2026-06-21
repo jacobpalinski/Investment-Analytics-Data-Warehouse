@@ -22,7 +22,7 @@ class NewsApi:
         self.news_api_client = NewsDataApiClient(news_api_key)
     
     @retry(
-    retry=retry_if_exception_type((TimeoutError, ValueError)),
+    retry=retry_if_exception_type(TimeoutError),
     wait=wait_fixed(10),
     stop=stop_after_attempt(3),
     before=before_log(logger, logging.INFO),
@@ -58,9 +58,13 @@ class NewsApi:
             except concurrent.futures.TimeoutError:
                 raise TimeoutError(f"API call timed out after {timeout}s for params: {params}")
 
-        if not response or "results" not in response or len(response["results"]) == 0:
+        if not response or "results" not in response:
             raise ValueError("Empty or invalid response received from NewsData API.")
-        
+
+        if len(response["results"]) == 0:
+            logger.warning(f"No articles found for {params}")
+            return {"results": []}
+
         logger.info(f"Successfully extracted articles for {params} from News API")
 
         return response
