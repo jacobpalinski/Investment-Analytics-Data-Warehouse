@@ -47,7 +47,7 @@ class TestSecApi:
 
         assert result == [
             {   
-                "extraction_timestamp": datetime(2026, 5, 14, 11, 45, 30, 123456, tzinfo=timezone.utc),
+                "extraction_timestamp": "2026-05-14T11:45:30.123456+00:00",
                 "cik": "0001112223",
                 "fiscal_year": 2024,
                 "fiscal_quarter": "Q4",

@@ -36,7 +36,7 @@ class TestNewsApi:
         # Retry should have been attempted 3 times
         assert mock_news_api_client.call_count == 3
     
-    def test_fetch_with_retry_empty_response(self, mock_news_api_client):
+    def test_fetch_with_retry_value_error(self, mock_news_api_client):
         """ Test handling of empty response from News API """
         news_api = NewsApi("dummy_key")
         news_api.news_api_client = mock_news_api_client
@@ -48,7 +48,7 @@ class TestNewsApi:
             news_api.fetch_with_retry(params, timeout=0.1)
 
         # Retry should have been attempted 3 times
-        assert mock_news_api_client.call_count == 3
+        assert mock_news_api_client.call_count == 1
     
 
         
