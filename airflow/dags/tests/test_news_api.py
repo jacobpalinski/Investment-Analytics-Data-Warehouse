@@ -43,7 +43,7 @@ class TestNewsApi:
         mock_news_api_client.configure(raise_empty=True)
         params = {"category": "business", "country": "us", "qInMeta": "economy AND interest rate"}
 
-        # Run test and assert RetryError
+        # Run test and assert empty result set
         response = news_api.fetch_with_retry(params, timeout=0.1)
 
         assert response == {"results": []}
