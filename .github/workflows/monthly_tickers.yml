@@ -32,4 +32,4 @@ jobs:
       - name: Run extract_listed_tickers.py
         run: |
           export PYTHONPATH=$GITHUB_WORKSPACE/airflow
-          python airflow/dags/nasdaq_listed_tickers/extract_listed_tickers.py
+          python airflow/dags/nasdaq_listed_tickers_dag/extract_listed_tickers.py

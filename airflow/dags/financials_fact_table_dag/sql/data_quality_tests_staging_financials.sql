@@ -30,9 +30,9 @@ count(*) AS failed_count,
 case when count(*) = 0 then 'PASS' else 'FAIL' end,
 current_timestamp
 from 
-(select cik, filing_date, fiscal_year, fiscal_quarter, financial_statement, item, usd_value
+(select extraction_timestamp, cik, filing_date, fiscal_year, fiscal_quarter, financial_statement, item, usd_value
 from investment_analytics.staging.staging_financials
-group by cik, filing_date, fiscal_year, fiscal_quarter, financial_statement, item, usd_value
+group by extraction_timestamp, cik, filing_date, fiscal_year, fiscal_quarter, financial_statement, item, usd_value
 having count(*) > 1);
 
 -- Check for outliers (small and large)
